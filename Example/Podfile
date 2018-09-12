@@ -1,0 +1,6 @@
+use_frameworks!
+target 'JJLISO8601DateFormatter_Tests' do
+  pod 'JJLISO8601DateFormatter', :path => '../'
+  
+  pod 'Kiwi'
+end
