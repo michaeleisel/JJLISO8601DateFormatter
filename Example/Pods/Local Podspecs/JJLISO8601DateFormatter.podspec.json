@@ -1,0 +1,23 @@
+{
+  "name": "JJLISO8601DateFormatter",
+  "version": "0.1.0",
+  "summary": "A short description of JJLISO8601DateFormatter.",
+  "description": "TODO: Add long description of the pod here.",
+  "homepage": "https://github.com/michaeleisel/JJLISO8601DateFormatter",
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "authors": {
+    "michaeleisel": "michael.eisel@gmail.com"
+  },
+  "source": {
+    "git": "https://github.com/michaeleisel/JJLISO8601DateFormatter.git",
+    "tag": "0.1.0"
+  },
+  "platforms": {
+    "ios": "10.0"
+  },
+  "source_files": "JJLISO8601DateFormatter/Classes/**/*",
+  "requires_arc": false
+}

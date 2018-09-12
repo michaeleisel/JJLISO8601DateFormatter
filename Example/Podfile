@@ -1,6 +1,4 @@
-use_frameworks!
-target 'JJLISO8601DateFormatter_Tests' do
+platform :ios, '10.0'
+target 'JJLISO8601DateFormatterTesting' do
   pod 'JJLISO8601DateFormatter', :path => '../'
-  
-  pod 'Kiwi'
 end
