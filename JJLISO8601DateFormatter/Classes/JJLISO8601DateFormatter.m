@@ -11,7 +11,7 @@ static const NSInteger kJJLMaxLength = 40;
 
 @implementation JJLISO8601DateFormatter
 
-// allow for "+" unary operator?
+// allow for "+" unary operator
 // asserts for invalid minute, year, etc.?
 // todo: sizeof long?
 // todo: max length correct? large numbers?
@@ -44,16 +44,39 @@ static const NSInteger kJJLMaxLength = 40;
 
 typedef char JJLBuffer[kJJLMaxLength];
 
+#define JJL_COPY(...) \
+({ \
+char __tmpBuffer[] = {__VA_ARGS__}; \
+memcpy(buffer, __tmpBuffer, sizeof(__tmpBuffer)); \
+(*bufferPtr) += sizeof(__tmpBuffer); \
+})
+
 static JJL_ALWAYS_INLINE NSString *JJLStringFromDate(NSDate *date, NSTimeZone *timeZone, NSISO8601DateFormatOptions formatOptions)
 {
+    if (!timeZone) {
+        timeZone = [NSTimeZone defaultTimeZone];
+    }
     JJLBuffer bufferStruct = {0};
     char *buffer = (char *)bufferStruct;
+    char **bufferPtr = &buffer;
     char *start = &(buffer[0]);
     struct tm components = {0};
-    time_t time = date.timeIntervalSince1970;
+    time_t time = date.timeIntervalSince1970 - [timeZone secondsFromGMTForDate:date];
     localtime_r(&time, &components);
-    JJLFillBufferWithYear(components.tm_year + 1901, &buffer);
-    JJLFillBufferWithSecondOrMinute(components.tm_min, &buffer);
+    JJLFillBufferWithYear(components.tm_year + 1900, &buffer);
+    JJL_COPY('-');
+    JJLFillBufferWithMonth(components.tm_mon + 1, &buffer);
+    JJL_COPY('-');
+    JJLFillBufferWithUpTo60(components.tm_mday, &buffer);
+    JJL_COPY('T');
+    JJLFillBufferWithUpTo60(components.tm_hour, &buffer);
+    JJL_COPY(':');
+    JJLFillBufferWithUpTo60(components.tm_min, &buffer);
+    JJL_COPY(':');
+    JJLFillBufferWithUpTo60(components.tm_sec, &buffer);
+    JJL_COPY('Z');
+    // JJL_COPY('-');
+    // JJL_COPY(':');
     /*if (components) {
         <#statements#>
     }
@@ -61,15 +84,18 @@ static JJL_ALWAYS_INLINE NSString *JJLStringFromDate(NSDate *date, NSTimeZone *t
     return CFAutorelease(CFStringCreateWithCString(kCFAllocatorDefault, start, kCFStringEncodingUTF8));
 }
 
-#define JJL_COPY(...) \
-({ \
-char __tmpBuffer[] = {__VA_ARGS__}; \
-memcpy(buffer, __tmpBuffer, sizeof(__tmpBuffer)); \
-bufferPtr += sizeof(__tmpBuffer); \
-})
+static inline void JJLFillBufferWithMonth(int month, char **bufferPtr) {
+    NSCAssert(1 <= month && month <= 12, @"");
+    char *buffer = *bufferPtr;
+    if (month < 10) {
+        JJL_COPY('0', month + '0');
+    } else {
+        JJL_COPY('1', month - 10 + '0');
+    }
+}
 
 // Requires buffer to be at least 5 bytes
-static inline void JJLFillBufferWithYear(int year, JJLBuffer *bufferPtr) {
+static inline void JJLFillBufferWithYear(int year, char **bufferPtr) {
     char *buffer = *bufferPtr;
     if (2010 <= year && year <= 2019) {
         JJL_COPY('2', '0', '1', year - 2010 + '0');
@@ -99,20 +125,21 @@ static inline void JJLFillBufferWithYear(int year, JJLBuffer *bufferPtr) {
     (*bufferPtr) += strlen(*bufferPtr);
 }
 
-static inline void JJLFillBufferWithSecondOrMinute(int time, JJLBuffer *bufferPtr) {
+static inline void JJLFillBufferWithUpTo60(int time, char **bufferPtr) {
+    NSCAssert(0 <= time && time <= 60, @"");
     char *buffer = *bufferPtr;
     int32_t tens = 0;
-    if (time <= 30) {
+    if (time >= 30) {
         tens += 3;
         time -= 30;
     }
-    if (time <= 10) {
+    if (time >= 10) {
         tens += 1;
         time -= 10;
-        if (time <= 10) {
+        if (time >= 10) {
             tens += 1;
             time -= 10;
-            if (time <= 10) { // Last one for leap seconds
+            if (time >= 10) { // Last one for leap seconds
                 tens += 1;
                 time -= 10;
             }

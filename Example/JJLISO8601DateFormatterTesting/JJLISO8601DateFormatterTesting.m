@@ -19,10 +19,20 @@
     [super tearDown];
 }
 
+- (void)stuff {
+    /*NSDateComponents *comps = [[NSDateComponents alloc] init];
+     comps.year = 2018;
+     // comps.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"BRT"];
+     NSDate *date = [[NSCalendar currentCalendar] dateFromComponents:comps];
+     [appleFormatter stringFromDate:date];*/
+     // NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+}
+
 // leap seconds
 // neg nums
 - (void)testSimpleFormatting {
     NSISO8601DateFormatter *appleFormatter = [[NSISO8601DateFormatter alloc] init];
+    // appleFormatter.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"BRT"];
     JJLISO8601DateFormatter *myFormatter = [[JJLISO8601DateFormatter alloc] init];
     NSDate *date = [NSDate dateWithTimeIntervalSince1970:0];
     NSString *appleString = [appleFormatter stringFromDate:date];
