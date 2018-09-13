@@ -34,10 +34,16 @@
     NSISO8601DateFormatter *appleFormatter = [[NSISO8601DateFormatter alloc] init];
     // appleFormatter.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"BRT"];
     JJLISO8601DateFormatter *myFormatter = [[JJLISO8601DateFormatter alloc] init];
-    NSDate *date = [NSDate dateWithTimeIntervalSince1970:0];
-    NSString *appleString = [appleFormatter stringFromDate:date];
-    NSString *myString = [myFormatter stringFromDate:date];
-    XCTAssertEqualObjects(appleString, myString);
+    for (NSInteger i = 0; i < 60 * 60 * 24 * 365 * 50; i += 101) {
+        NSDate *date = [NSDate dateWithTimeIntervalSince1970:i];
+        NSString *appleString = [appleFormatter stringFromDate:date];
+        // NSString *myString = [myFormatter stringFromDate:date];
+        if (i % (60 * 60 * 24 * 365) == 0) {
+            printf("i: %zd\n", i);
+        }
+        // assert([appleString isEqualToString:myString]);
+        // XCTAssertEqualObjects(appleString, myString);
+    }
 }
 
 - (void)testPerformanceExample {
