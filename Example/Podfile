@@ -1,4 +1,13 @@
 platform :ios, '10.0'
-target 'JJLISO8601DateFormatterTesting' do
+
+target 'JJLISO8601DateFormatterApp' do
   pod 'JJLISO8601DateFormatter', :path => '../'
 end
+
+=begin
+["JJLISO8601DateFormatterTesting", "JJLISO8601DateFormatterApp"].each do |t|
+    target t do
+      pod 'JJLISO8601DateFormatter', :path => '../'
+    end
+end
+=end

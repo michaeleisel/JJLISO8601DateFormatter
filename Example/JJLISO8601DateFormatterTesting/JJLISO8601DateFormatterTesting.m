@@ -31,10 +31,12 @@
 // leap seconds
 // neg nums
 - (void)testSimpleFormatting {
-    NSISO8601DateFormatter *appleFormatter = [[NSISO8601DateFormatter alloc] init];
-    // appleFormatter.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"BRT"];
+    // NSISO8601DateFormatter *appleFormatter = [[NSISO8601DateFormatter alloc] init];
+    // appleFormatter.timeZone = brazilTimeZone;
+    // appleFormatter stringFromDate
+    NSString *str = [NSISO8601DateFormatter stringFromDate:[NSDate date] timeZone:brazilTimeZone formatOptions:0];
     JJLISO8601DateFormatter *myFormatter = [[JJLISO8601DateFormatter alloc] init];
-    for (NSInteger i = 0; i < 60 * 60 * 24 * 365 * 50; i += 101) {
+    /*for (NSInteger i = 0; i < 60 * 60 * 24 * 365 * 50; i += 101) {
         NSDate *date = [NSDate dateWithTimeIntervalSince1970:i];
         NSString *appleString = [appleFormatter stringFromDate:date];
         // NSString *myString = [myFormatter stringFromDate:date];
@@ -43,13 +45,17 @@
         }
         // assert([appleString isEqualToString:myString]);
         // XCTAssertEqualObjects(appleString, myString);
-    }
+    }*/
 }
 
 - (void)testPerformanceExample {
     // This is an example of a performance test case.
+    JJLISO8601DateFormatter *formatter = [[JJLISO8601DateFormatter alloc] init];
+    NSDate *date = [NSDate dateWithTimeIntervalSince1970:400];
     [self measureBlock:^{
-        // Put the code you want to measure the time of here.
+        for (NSInteger i = 0; i < 1e3; i++) {
+            [formatter stringFromDate:date];
+        }
     }];
 }
 
