@@ -1,4 +1,4 @@
-//Copyright (c) 2018 Michael Eisel. All rights reserved.
+// Copyright (c) 2018 Michael Eisel. All rights reserved.
 
 #import "ViewController.h"
 #import <JJLISO8601DateFormatter/JJLISO8601DateFormatter.h>
@@ -15,6 +15,21 @@
 #define DAYS (24 * HOURS)
 #define YEARS (365 * DAYS)
 
+- (NSArray *)recursiveSearchForDirectory:(NSString *)directory
+{
+    NSMutableArray *array = [NSMutableArray array];
+    for (NSString *url in [[NSFileManager defaultManager] contentsOfDirectoryAtPath:directory error:nil]) {
+        BOOL isDirectory = NO;
+        [[NSFileManager defaultManager] fileExistsAtPath:url isDirectory:&isDirectory];
+        if (isDirectory) {
+            [array addObjectsFromArray:[self recursiveSearchForDirectory:url]];
+        } else {
+            [array addObject:url];
+        }
+    }
+    return [array copy];
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
 
@@ -23,6 +38,14 @@
     NSISO8601DateFormatOptions opts =
     NSISO8601DateFormatWithInternetDateTime | NSISO8601DateFormatWithDashSeparatorInDate | NSISO8601DateFormatWithColonSeparatorInTime | NSISO8601DateFormatWithColonSeparatorInTimeZone | NSISO8601DateFormatWithFractionalSeconds;
 
+    NSError *error = nil;
+    // NSLog(@"%@", [NSString stringWithContentsOfFile:@"/usr/share/zoneinfo/America" encoding:NSASCIIStringEncoding error:&error]);
+    NSLog(@"%@", error);
+    struct tm tt = {0};
+    time_t time = 0;
+    localtime_r(&time, &tt);
+    NSLog(@"apple %@", [[NSTimeZone knownTimeZoneNames] sortedArrayUsingSelector:@selector(compare:)]);
+    NSLog(@"mine %@", [[self recursiveSearchForDirectory:@"/usr/share/zoneinfo"] sortedArrayUsingSelector:@selector(compare:)]);
     NSLog(@"Recent dates");
     NSDate *startDate = [NSDate dateWithTimeIntervalSinceNow:-15 * DAYS];
     NSDate *endDate = [NSDate dateWithTimeIntervalSinceNow:15 * DAYS];

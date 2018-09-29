@@ -129,6 +129,9 @@ static inline NSString *JJLStringFromDate(NSDate *date, NSTimeZone *timeZone, NS
     char *bufferPtr = (char *)buffer;
     int32_t firstWeekday = (int32_t)sFirstWeekday; // Use a copy of sFirstWeekday in case it changes
     JJLFillBufferForDate(bufferPtr, time, firstWeekday, NO, (CFISO8601DateFormatOptions)formatOptions);
+    /*time_t time = date.timeIntervalSince1970;// - [timeZone secondsFromGMTForDate:date];
+    char buffer[kJJLMaxLength] = {0};
+    JJLFillBufferForDate(buffer, time, NO, (CFISO8601DateFormatOptions)formatOptions);*/
     return CFAutorelease(CFStringCreateWithCString(kCFAllocatorDefault, buffer, kCFStringEncodingUTF8));
 }
 
