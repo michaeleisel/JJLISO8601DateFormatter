@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		51DE264169B68991DCE6F909 /* libPods-JJLISO8601DateFormatterTesting.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DF5F706C2D4519FACA0B88D9 /* libPods-JJLISO8601DateFormatterTesting.a */; };
 		B330AE36214986B90016D917 /* JJLISO8601DateFormatterTesting.m in Sources */ = {isa = PBXBuildFile; fileRef = B330AE35214986B90016D917 /* JJLISO8601DateFormatterTesting.m */; };
 		B366CCF82149E13800838689 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = B366CCF72149E13800838689 /* AppDelegate.m */; };
 		B366CCFB2149E13800838689 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B366CCFA2149E13800838689 /* ViewController.m */; };
@@ -18,6 +19,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5CA84F5C44DBB4B4F35A25E4 /* Pods-JJLISO8601DateFormatterTesting.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JJLISO8601DateFormatterTesting.debug.xcconfig"; path = "Pods/Target Support Files/Pods-JJLISO8601DateFormatterTesting/Pods-JJLISO8601DateFormatterTesting.debug.xcconfig"; sourceTree = "<group>"; };
+		8C36034D0A16C4FAC7EB9FF4 /* Pods-JJLISO8601DateFormatterTesting.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JJLISO8601DateFormatterTesting.release.xcconfig"; path = "Pods/Target Support Files/Pods-JJLISO8601DateFormatterTesting/Pods-JJLISO8601DateFormatterTesting.release.xcconfig"; sourceTree = "<group>"; };
 		912822501B1CC7D1E323F798 /* libPods-JJLISO8601DateFormatterApp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-JJLISO8601DateFormatterApp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A2DD7BF2F55C0D1282EDF2E4 /* Pods-JJLISO8601DateFormatterApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JJLISO8601DateFormatterApp.release.xcconfig"; path = "Pods/Target Support Files/Pods-JJLISO8601DateFormatterApp/Pods-JJLISO8601DateFormatterApp.release.xcconfig"; sourceTree = "<group>"; };
 		B330AE33214986B90016D917 /* JJLISO8601DateFormatterTesting.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JJLISO8601DateFormatterTesting.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -42,6 +45,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				51DE264169B68991DCE6F909 /* libPods-JJLISO8601DateFormatterTesting.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -115,6 +119,8 @@
 			children = (
 				D176F898D2738DB713292FBD /* Pods-JJLISO8601DateFormatterApp.debug.xcconfig */,
 				A2DD7BF2F55C0D1282EDF2E4 /* Pods-JJLISO8601DateFormatterApp.release.xcconfig */,
+				5CA84F5C44DBB4B4F35A25E4 /* Pods-JJLISO8601DateFormatterTesting.debug.xcconfig */,
+				8C36034D0A16C4FAC7EB9FF4 /* Pods-JJLISO8601DateFormatterTesting.release.xcconfig */,
 			);
 			name = Pods;
 			sourceTree = "<group>";
@@ -126,6 +132,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = B330AE38214986B90016D917 /* Build configuration list for PBXNativeTarget "JJLISO8601DateFormatterTesting" */;
 			buildPhases = (
+				68F10F2D033C55CE14544A51 /* [CP] Check Pods Manifest.lock */,
 				B330AE2F214986B90016D917 /* Sources */,
 				B330AE30214986B90016D917 /* Frameworks */,
 				B330AE31214986B90016D917 /* Resources */,
@@ -226,6 +233,24 @@
 			name = "[CP] Check Pods Manifest.lock";
 			outputPaths = (
 				"$(DERIVED_FILE_DIR)/Pods-JJLISO8601DateFormatterApp-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		68F10F2D033C55CE14544A51 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-JJLISO8601DateFormatterTesting-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -387,14 +412,11 @@
 		};
 		B330AE39214986B90016D917 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5CA84F5C44DBB4B4F35A25E4 /* Pods-JJLISO8601DateFormatterTesting.debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = JJLISO8601DateFormatterTesting/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.JJLISO8601DateFormatterTesting;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -403,14 +425,11 @@
 		};
 		B330AE3A214986B90016D917 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8C36034D0A16C4FAC7EB9FF4 /* Pods-JJLISO8601DateFormatterTesting.release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = JJLISO8601DateFormatterTesting/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.JJLISO8601DateFormatterTesting;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -425,10 +444,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = LE4EC4296K;
 				INFOPLIST_FILE = JJLISO8601DateFormatterApp/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.JJLISO8601DateFormatterApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -443,10 +459,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = LE4EC4296K;
 				INFOPLIST_FILE = JJLISO8601DateFormatterApp/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.JJLISO8601DateFormatterApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";

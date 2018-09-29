@@ -4,10 +4,6 @@ target 'JJLISO8601DateFormatterApp' do
   pod 'JJLISO8601DateFormatter', :path => '../'
 end
 
-=begin
-["JJLISO8601DateFormatterTesting", "JJLISO8601DateFormatterApp"].each do |t|
-    target t do
-      pod 'JJLISO8601DateFormatter', :path => '../'
-    end
+target 'JJLISO8601DateFormatterTesting' do
+  pod 'JJLISO8601DateFormatter', :path => '../'
 end
-=end

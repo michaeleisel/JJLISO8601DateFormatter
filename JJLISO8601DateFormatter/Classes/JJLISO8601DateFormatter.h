@@ -21,6 +21,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (NSString *)stringFromDate:(NSDate *)date timeZone:(NSTimeZone *)timeZone formatOptions:(NSISO8601DateFormatOptions)formatOptions;
 
+BOOL JJLIsValidFormatOptions(NSISO8601DateFormatOptions formatOptions);
+
 @end
 
 NS_ASSUME_NONNULL_END

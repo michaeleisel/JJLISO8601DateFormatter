@@ -114,7 +114,7 @@ inline char* u32toa(uint32_t value, char* buffer) {
     return buffer;
 }
 
-static inline char* i32toa(int32_t value, char* buffer) {
+inline char* i32toa(int32_t value, char* buffer) {
     uint32_t u = (uint32_t)value;
     if (value < 0) {
         *buffer++ = '-';
