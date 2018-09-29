@@ -2,7 +2,6 @@
 
 #import "ViewController.h"
 #import <JJLISO8601DateFormatter/JJLISO8601DateFormatter.h>
-#import <malloc/malloc.h>
 
 @interface ViewController ()
 
@@ -21,40 +20,23 @@
     NSISO8601DateFormatter *appleFormatter = [[NSISO8601DateFormatter alloc] init];
     JJLISO8601DateFormatter *myFormatter = [[JJLISO8601DateFormatter alloc] init];
     NSDate *date = [NSDate dateWithTimeIntervalSinceNow:-60 * 60 * 24];
-    NSInteger sum = 0;
-    NSInteger total = 1e7;
-    ({
+    /*({
         CFTimeInterval start = CACurrentMediaTime();
-        /*for (NSInteger i = 0; i < 1e6; i++) {
+        for (NSInteger i = 0; i < 1e6; i++) {
             [appleFormatter stringFromDate:date];
-        }*/
-        for (NSInteger i = 0; i < total; i++) {
-            void *ptr = malloc(16);
-            sum += (NSInteger)ptr;
-            free(ptr);
         }
         CFTimeInterval end = CACurrentMediaTime();
         NSLog(@"%@", @(end - start));
     });
-    usleep(5e5);
-    unsigned batchCount = 5;
-    malloc_zone_t *defaultZone = malloc_default_zone();
+    usleep(5e5);*/
     ({
         CFTimeInterval start = CACurrentMediaTime();
-        /*for (NSInteger i = 0; i < 1e6; i++) {
+        for (NSInteger i = 0; i < 1e6; i++) {
             [myFormatter stringFromDate:date];
-        }*/
-        void *results[batchCount];
-        for (NSInteger i = 0; i < total / batchCount; i++) {
-            unsigned count = malloc_zone_batch_malloc(defaultZone, 16, results, batchCount);
-            assert(count == batchCount);
-            sum += (NSInteger)results[batchCount - 1];
-            malloc_zone_batch_free(defaultZone, results, count);
         }
         CFTimeInterval end = CACurrentMediaTime();
         NSLog(@"%@", @(end - start));
     });
-    NSLog(@"%zd", sum);
 }
 
 #define SECONDS (1)

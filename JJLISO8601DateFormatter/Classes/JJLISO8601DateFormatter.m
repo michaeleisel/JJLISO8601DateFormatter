@@ -3,16 +3,12 @@
 #import "JJLISO8601DateFormatter.h"
 #import "itoa.h"
 #import "JJLInternal.h"
-#import <malloc/malloc.h>
 
 #define JJL_ALWAYS_INLINE __attribute__((always_inline))
 
-static const NSInteger kJJLBatchMallocCount = 5;
+// Note: this class does not use ARC
 
-@implementation JJLISO8601DateFormatter {
-    NSInteger _currentMallocIndex;
-    char *mallocs[kJJLBatchMallocCount];
-}
+@implementation JJLISO8601DateFormatter
 
 @synthesize formatOptions = _formatOptions;
 
@@ -29,7 +25,6 @@ static const NSInteger kJJLBatchMallocCount = 5;
     self = [super init];
     if (self) {
         _formatOptions = NSISO8601DateFormatWithInternetDateTime | NSISO8601DateFormatWithDashSeparatorInDate | NSISO8601DateFormatWithColonSeparatorInTime | NSISO8601DateFormatWithColonSeparatorInTimeZone;
-        // malloc_zone_batch_malloc(malloc_default_zone(), kJJLBatchMallocCount, <#void **results#>, <#unsigned int num_requested#>)
     }
     return self;
 }
