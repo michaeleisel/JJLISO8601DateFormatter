@@ -69,9 +69,8 @@ static JJL_ALWAYS_INLINE NSString *JJLStringFromDate(NSDate *date, NSTimeZone *t
         timeZone = [NSTimeZone defaultTimeZone];
     }*/
     time_t time = date.timeIntervalSince1970;// - [timeZone secondsFromGMTForDate:date];
-    char bufferStruct[kJJLMaxLength] = {0};
-    char *buffer = (char *)bufferStruct;
-    JJLFillBufferForDate(buffer, time, NO, formatOptions);
+    char buffer[kJJLMaxLength] = {0};
+    JJLFillBufferForDate(buffer, time, NO, (CFISO8601DateFormatOptions)formatOptions);
     return CFAutorelease(CFStringCreateWithCString(kCFAllocatorDefault, buffer, kCFStringEncodingUTF8));
 }
 
