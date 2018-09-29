@@ -10,7 +10,17 @@
 
 @implementation JJLISO8601DateFormatter
 
+static NSTimeZone *sGMTTimeZone = nil;
+
 @synthesize formatOptions = _formatOptions;
+@synthesize timeZone = _timeZone;
+
+static void JJLPerformInitialSetupIfNecessary() {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sGMTTimeZone = [[NSTimeZone timeZoneWithName:@"GMT"] retain];
+    });
+}
 
 // todo: does the C assert function turn off in release?
 // allow for "+" unary operator
@@ -24,14 +34,38 @@
 {
     self = [super init];
     if (self) {
+        JJLPerformInitialSetupIfNecessary();
         _formatOptions = NSISO8601DateFormatWithInternetDateTime | NSISO8601DateFormatWithDashSeparatorInDate | NSISO8601DateFormatWithColonSeparatorInTime | NSISO8601DateFormatWithColonSeparatorInTimeZone;
+        _timeZone = sGMTTimeZone;
     }
     return self;
 }
 
+// This property is atomic, but since it is a simple primitive, it's fine to just return it
 - (NSISO8601DateFormatOptions)formatOptions
 {
     return _formatOptions;
+}
+
+// This property is atomic, but since it is a simple primitive, it's fine to just set it
+- (void)setFormatOptions:(NSISO8601DateFormatOptions)formatOptions
+{
+    NSAssert(JJLIsValidFormatOptions(formatOptions), @"Invalid format option, must satisfy formatOptions == 0 || !(formatOptions & ~(NSISO8601DateFormatWithYear | NSISO8601DateFormatWithMonth | NSISO8601DateFormatWithWeekOfYear | NSISO8601DateFormatWithDay | NSISO8601DateFormatWithTime | NSISO8601DateFormatWithTimeZone | NSISO8601DateFormatWithSpaceBetweenDateAndTime | NSISO8601DateFormatWithDashSeparatorInDate | NSISO8601DateFormatWithColonSeparatorInTime | NSISO8601DateFormatWithColonSeparatorInTimeZone | NSISO8601DateFormatWithFractionalSeconds | NSISO8601DateFormatWithFullDate | NSISO8601DateFormatWithFullTime | NSISO8601DateFormatWithInternetDateTime))");
+    _formatOptions = formatOptions;
+}
+
+- (NSTimeZone *)timeZone
+{
+    @synchronized(self) {
+        return _timeZone;
+    }
+}
+
+- (void)setTimeZone:(NSTimeZone *)timeZone
+{
+    @synchronized(self) {
+        _timeZone = timeZone ?: sGMTTimeZone;
+    }
 }
 
 BOOL JJLIsValidFormatOptions(NSISO8601DateFormatOptions formatOptions) {
@@ -40,12 +74,6 @@ BOOL JJLIsValidFormatOptions(NSISO8601DateFormatOptions formatOptions) {
         mask |= NSISO8601DateFormatWithFractionalSeconds;
     }
     return formatOptions == 0 || !(formatOptions & ~mask);
-}
-
-- (void)setFormatOptions:(NSISO8601DateFormatOptions)formatOptions
-{
-    NSAssert(JJLIsValidFormatOptions(formatOptions), @"Invalid format option, must satisfy formatOptions == 0 || !(formatOptions & ~(NSISO8601DateFormatWithYear | NSISO8601DateFormatWithMonth | NSISO8601DateFormatWithWeekOfYear | NSISO8601DateFormatWithDay | NSISO8601DateFormatWithTime | NSISO8601DateFormatWithTimeZone | NSISO8601DateFormatWithSpaceBetweenDateAndTime | NSISO8601DateFormatWithDashSeparatorInDate | NSISO8601DateFormatWithColonSeparatorInTime | NSISO8601DateFormatWithColonSeparatorInTimeZone | NSISO8601DateFormatWithFractionalSeconds | NSISO8601DateFormatWithFullDate | NSISO8601DateFormatWithFullTime | NSISO8601DateFormatWithInternetDateTime))");
-    _formatOptions = formatOptions;
 }
 
 - (NSString *)stringFromDate:(NSDate *)date
@@ -63,15 +91,15 @@ BOOL JJLIsValidFormatOptions(NSISO8601DateFormatOptions formatOptions) {
     return @"";
 }
 
-static JJL_ALWAYS_INLINE NSString *JJLStringFromDate(NSDate *date, NSTimeZone *timeZone, NSISO8601DateFormatOptions formatOptions)
+static inline NSString *JJLStringFromDate(NSDate *date, NSTimeZone *timeZone, NSISO8601DateFormatOptions formatOptions)
 {
     /*if (!timeZone) {
         timeZone = [NSTimeZone defaultTimeZone];
     }*/
     time_t time = date.timeIntervalSince1970;// - [timeZone secondsFromGMTForDate:date];
-    char bufferStruct[kJJLMaxLength] = {0};
-    char *buffer = (char *)bufferStruct;
-    JJLFillBufferForDate(buffer, time, NO, formatOptions);
+    char buffer[kJJLMaxLength] = {0};
+    char *bufferPtr = (char *)buffer;
+    JJLFillBufferForDate(bufferPtr, time, NO, (CFISO8601DateFormatOptions)formatOptions);
     return CFAutorelease(CFStringCreateWithCString(kCFAllocatorDefault, buffer, kCFStringEncodingUTF8));
 }
 

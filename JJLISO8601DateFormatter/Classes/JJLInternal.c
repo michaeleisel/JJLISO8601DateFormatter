@@ -185,11 +185,11 @@ void JJLFillBufferForDate(char *buffer, time_t timeInSeconds, bool local, CFISO8
         } else {
             // Could be optimized, but seems like a rare case
             char *newEnd = i32toa(components.tm_yday + 1, &(string.buffer[string.length]));
-            string.length = (int32_t)(newEnd - *string.buffer);
+            string.length = (int32_t)(newEnd - string.buffer);
         }
     }
 
-    bool showTime = !!(options & (kCFISO8601DateFormatWithTime | kCFISO8601DateFormatWithFullTime));
+    bool showTime = !!(options & kCFISO8601DateFormatWithTime);
     bool showTimeSeparator = !!(options & kCFISO8601DateFormatWithColonSeparatorInTime);
     bool timeSeparatorIsSpace = !!(options & kCFISO8601DateFormatWithSpaceBetweenDateAndTime);
     if (showTime) {
