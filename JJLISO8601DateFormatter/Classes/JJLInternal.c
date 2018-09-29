@@ -9,10 +9,6 @@
 #import "JJLInternal.h"
 #import "itoa.h"
 
-void
-JJLGmtSub(time_t const *timep, struct tm *tmp);
-// void gmtload(struct state *const sp);
-
 typedef struct {
     char *buffer;
     int32_t length;
@@ -145,7 +141,7 @@ void JJLFillBufferForDate(char *buffer, time_t timeInSeconds, bool local, CFISO8
     if (local) {
         localtime_r(&timeInSeconds, &components);
     } else {
-        JJLGmtSub(&timeInSeconds, &components);
+        gmtime_r(&timeInSeconds, &components);
     }
     // timeInSeconds -= components.tm_gmtoff;
     bool showYear = !!(options & kCFISO8601DateFormatWithYear);

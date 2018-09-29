@@ -8,20 +8,17 @@
 
 /* Begin PBXBuildFile section */
 		0465E18249D76453ACA4D9290EAC39AE /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6604A7D69453B4569E4E4827FB9155A9 /* Foundation.framework */; };
-		1DC4D2866AA8AA160F972E24060A7C1A /* localtime.c in Sources */ = {isa = PBXBuildFile; fileRef = 985A7B0D788708B5D36F559D35C55C27 /* localtime.c */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		2E84D288C8F380A42A2F5BE256DE148A /* itoa.c in Sources */ = {isa = PBXBuildFile; fileRef = A2C69DBBD04CBB0506F8FE8B64F9059D /* itoa.c */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		3264A8CDF716F23E6C9EAE5D74724470 /* Pods-JJLISO8601DateFormatterTesting-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = B6B3328098767675B017AC4597B294E1 /* Pods-JJLISO8601DateFormatterTesting-dummy.m */; };
-		4BC88BDD281B5F7F5B43875B8B4EE672 /* itoa.h in Headers */ = {isa = PBXBuildFile; fileRef = E961745FEDAFFD05906D3A3D7E3F0ADB /* itoa.h */; settings = {ATTRIBUTES = (Project, ); }; };
-		585835D758700BD8D40AD9DB5DB2A48B /* tzfile.h in Headers */ = {isa = PBXBuildFile; fileRef = 53A71CCBD97342B3C34FF19163658E5B /* tzfile.h */; settings = {ATTRIBUTES = (Project, ); }; };
+		350DB5AB291E39FBAAD8B0969E297F6B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6604A7D69453B4569E4E4827FB9155A9 /* Foundation.framework */; };
+		5C78597F57AFF20AC4B0C46D25CF9C96 /* JJLISO8601DateFormatter.h in Headers */ = {isa = PBXBuildFile; fileRef = E9B58AC5638C97791FB0BD3B6FBE4E69 /* JJLISO8601DateFormatter.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		6221987088A8A279F51628D451F79106 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6604A7D69453B4569E4E4827FB9155A9 /* Foundation.framework */; };
-		75945B0C7ED037B8A02AC66A16223D23 /* JJLISO8601DateFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EE84886CB64E8830B7D973C4B526BF /* JJLISO8601DateFormatter.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		AE2C7E17C127D8A82787850197FD00C6 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6604A7D69453B4569E4E4827FB9155A9 /* Foundation.framework */; };
+		785D82D42124501D0A0C8D88A3D01AE8 /* JJLInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 8473B8E185D81C15DF2CA2CA5D338146 /* JJLInternal.h */; settings = {ATTRIBUTES = (Project, ); }; };
+		9E0BF9F5F256BCB1E744A0C853DCC333 /* itoa.c in Sources */ = {isa = PBXBuildFile; fileRef = 130DEE9EED28AD200605E8256A05368F /* itoa.c */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		A35F0AA6BE6D222E73EA39EB319C102E /* JJLISO8601DateFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = 442CE53A66AF7CF0D1287FD4D0D086C8 /* JJLISO8601DateFormatter.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		B46AEA831C42CDE153E3899D7858EB9B /* JJLISO8601DateFormatter-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 7F048A37A411E3AA7008C3A3AF1EDBB4 /* JJLISO8601DateFormatter-dummy.m */; };
+		B75A6EC1C928279B770DEB998673AA21 /* itoa.h in Headers */ = {isa = PBXBuildFile; fileRef = B6862DB04EACFF95C90922C880645CC0 /* itoa.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		BCAED9F71BDFDB0EFDCF3D453CE6C624 /* Pods-JJLISO8601DateFormatterApp-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = CD1B231E10600B00DCF81DF26079F1CA /* Pods-JJLISO8601DateFormatterApp-dummy.m */; };
-		CC300BC2F3A7D73F08BC9231DE3003F8 /* JJLInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = DA3DC1FCD88ABF8317054317FC4EFDAF /* JJLInternal.h */; settings = {ATTRIBUTES = (Project, ); }; };
-		CE7309761AB70FDC31E7FDA40D720987 /* JJLISO8601DateFormatter.h in Headers */ = {isa = PBXBuildFile; fileRef = DEADA3035E555B5937577F09D85A7A1E /* JJLISO8601DateFormatter.h */; settings = {ATTRIBUTES = (Project, ); }; };
-		E0F213C7ECDC442D140B4B3814E1AF61 /* JJLISO8601DateFormatter-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AEA7DF96ED10E325B47A4CE52D0959F /* JJLISO8601DateFormatter-dummy.m */; };
-		E287154790AF2C4405615592E0A92904 /* JJLInternal.c in Sources */ = {isa = PBXBuildFile; fileRef = 081286D2549C424FC1132B778548EC48 /* JJLInternal.c */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		FAAAEFAEA00A5872A3DB69E0E7B5A98C /* private.h in Headers */ = {isa = PBXBuildFile; fileRef = 59F5E17548767E5C3EE47EF46AF2F315 /* private.h */; settings = {ATTRIBUTES = (Project, ); }; };
+		DB9A9C475109A5AB75F4821C53B202C4 /* JJLInternal.c in Sources */ = {isa = PBXBuildFile; fileRef = 6D8C7BDBA63AC8F4CF0DC7049F7B2AAE /* JJLInternal.c */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,56 +26,61 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = D41D8CD98F00B204E9800998ECF8427E /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 47919B7FC5399757C3E0F2DEE88D0FAF;
+			remoteGlobalIDString = 0CAAD3626ADDD858CA71D85699F6BA97;
 			remoteInfo = JJLISO8601DateFormatter;
 		};
 		22FFBFEF7631C47CDF4091E45D4A8310 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D41D8CD98F00B204E9800998ECF8427E /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 47919B7FC5399757C3E0F2DEE88D0FAF;
+			remoteGlobalIDString = 0CAAD3626ADDD858CA71D85699F6BA97;
 			remoteInfo = JJLISO8601DateFormatter;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		081286D2549C424FC1132B778548EC48 /* JJLInternal.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = JJLInternal.c; path = JJLISO8601DateFormatter/Classes/JJLInternal.c; sourceTree = "<group>"; };
-		1AEA7DF96ED10E325B47A4CE52D0959F /* JJLISO8601DateFormatter-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "JJLISO8601DateFormatter-dummy.m"; sourceTree = "<group>"; };
-		1DA93BE599B9A7026A9621635676B5C2 /* JJLISO8601DateFormatter.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; path = JJLISO8601DateFormatter.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		130DEE9EED28AD200605E8256A05368F /* itoa.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = itoa.c; path = JJLISO8601DateFormatter/Classes/itoa.c; sourceTree = "<group>"; };
 		2E9D0E4C25773BA94892A93B0A9C0175 /* libJJLISO8601DateFormatter.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libJJLISO8601DateFormatter.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F0EC7742178C0C71C778F3039CC8E74 /* Pods-JJLISO8601DateFormatterTesting.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-JJLISO8601DateFormatterTesting.debug.xcconfig"; sourceTree = "<group>"; };
-		34EE84886CB64E8830B7D973C4B526BF /* JJLISO8601DateFormatter.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = JJLISO8601DateFormatter.m; path = JJLISO8601DateFormatter/Classes/JJLISO8601DateFormatter.m; sourceTree = "<group>"; };
+		3FD8A8B67B7B6F37FEB12CCFF153749C /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		42353E60335E1AD7532CB1B3DE5E5C82 /* Pods-JJLISO8601DateFormatterTesting-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-JJLISO8601DateFormatterTesting-frameworks.sh"; sourceTree = "<group>"; };
 		42655445202B19F014C7105488916CCE /* Pods-JJLISO8601DateFormatterApp-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-JJLISO8601DateFormatterApp-acknowledgements.markdown"; sourceTree = "<group>"; };
+		442CE53A66AF7CF0D1287FD4D0D086C8 /* JJLISO8601DateFormatter.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = JJLISO8601DateFormatter.m; path = JJLISO8601DateFormatter/Classes/JJLISO8601DateFormatter.m; sourceTree = "<group>"; };
 		442D1271CA4DE8276FDBF72B3C65EB7D /* Pods-JJLISO8601DateFormatterApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-JJLISO8601DateFormatterApp.release.xcconfig"; sourceTree = "<group>"; };
 		4FA6487DAACFDDDEE3556DE777E1F343 /* Pods-JJLISO8601DateFormatterApp-resources.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-JJLISO8601DateFormatterApp-resources.sh"; sourceTree = "<group>"; };
-		53A71CCBD97342B3C34FF19163658E5B /* tzfile.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = tzfile.h; sourceTree = "<group>"; };
-		59F5E17548767E5C3EE47EF46AF2F315 /* private.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = private.h; sourceTree = "<group>"; };
 		6604A7D69453B4569E4E4827FB9155A9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS10.3.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		6D8C7BDBA63AC8F4CF0DC7049F7B2AAE /* JJLInternal.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = JJLInternal.c; path = JJLISO8601DateFormatter/Classes/JJLInternal.c; sourceTree = "<group>"; };
+		7339C2B7A05725E83367FFA4E0A38ECE /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		7E243735F989C461955F83B2075FCF48 /* Pods-JJLISO8601DateFormatterTesting-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-JJLISO8601DateFormatterTesting-acknowledgements.markdown"; sourceTree = "<group>"; };
+		7F048A37A411E3AA7008C3A3AF1EDBB4 /* JJLISO8601DateFormatter-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "JJLISO8601DateFormatter-dummy.m"; sourceTree = "<group>"; };
+		8473B8E185D81C15DF2CA2CA5D338146 /* JJLInternal.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = JJLInternal.h; path = JJLISO8601DateFormatter/Classes/JJLInternal.h; sourceTree = "<group>"; };
 		8F6DAA1E1ED3D5BB093131984474696E /* Pods-JJLISO8601DateFormatterTesting.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-JJLISO8601DateFormatterTesting.release.xcconfig"; sourceTree = "<group>"; };
 		93A4A3777CF96A4AAC1D13BA6DCCEA73 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
-		93FED9F16232264C4A252AFFD3226787 /* JJLISO8601DateFormatter-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "JJLISO8601DateFormatter-prefix.pch"; sourceTree = "<group>"; };
-		985A7B0D788708B5D36F559D35C55C27 /* localtime.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; path = localtime.c; sourceTree = "<group>"; };
-		9CB28C8D4E7EAC30D48047677F890194 /* JJLISO8601DateFormatter.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = JJLISO8601DateFormatter.xcconfig; sourceTree = "<group>"; };
 		A2AE74CBDAE974042003CA316366042F /* libPods-JJLISO8601DateFormatterTesting.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-JJLISO8601DateFormatterTesting.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		A2C69DBBD04CBB0506F8FE8B64F9059D /* itoa.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = itoa.c; path = JJLISO8601DateFormatter/Classes/itoa.c; sourceTree = "<group>"; };
 		A3DBC34509057BA0DB7A66A68872D10E /* Pods-JJLISO8601DateFormatterTesting-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-JJLISO8601DateFormatterTesting-acknowledgements.plist"; sourceTree = "<group>"; };
 		AF9AED66758FE30DB768B7B20EC4551D /* Pods-JJLISO8601DateFormatterApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-JJLISO8601DateFormatterApp.debug.xcconfig"; sourceTree = "<group>"; };
 		B3A3B1E10BD8CDF6EBA8EC6D0491C66D /* Pods-JJLISO8601DateFormatterApp-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-JJLISO8601DateFormatterApp-acknowledgements.plist"; sourceTree = "<group>"; };
+		B6862DB04EACFF95C90922C880645CC0 /* itoa.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = itoa.h; path = JJLISO8601DateFormatter/Classes/itoa.h; sourceTree = "<group>"; };
 		B6B3328098767675B017AC4597B294E1 /* Pods-JJLISO8601DateFormatterTesting-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-JJLISO8601DateFormatterTesting-dummy.m"; sourceTree = "<group>"; };
-		CC760E14D4BD06BBC575F02F2962AC58 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		BC2317F7D9278F7699C678263BE85F56 /* JJLISO8601DateFormatter.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = JJLISO8601DateFormatter.xcconfig; sourceTree = "<group>"; };
+		BD7D4361DDFB7F3B3DBFAFCF16A78737 /* JJLISO8601DateFormatter-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "JJLISO8601DateFormatter-prefix.pch"; sourceTree = "<group>"; };
 		CD1B231E10600B00DCF81DF26079F1CA /* Pods-JJLISO8601DateFormatterApp-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-JJLISO8601DateFormatterApp-dummy.m"; sourceTree = "<group>"; };
+		D212C7AE347D7E6DFE590972EE5B27D2 /* JJLISO8601DateFormatter.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; path = JJLISO8601DateFormatter.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		D4FEB7C3853B1FB3BAB55A4FFF08F462 /* Pods-JJLISO8601DateFormatterTesting-resources.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-JJLISO8601DateFormatterTesting-resources.sh"; sourceTree = "<group>"; };
-		DA3DC1FCD88ABF8317054317FC4EFDAF /* JJLInternal.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = JJLInternal.h; path = JJLISO8601DateFormatter/Classes/JJLInternal.h; sourceTree = "<group>"; };
-		DEADA3035E555B5937577F09D85A7A1E /* JJLISO8601DateFormatter.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = JJLISO8601DateFormatter.h; path = JJLISO8601DateFormatter/Classes/JJLISO8601DateFormatter.h; sourceTree = "<group>"; };
 		E35FD81F27A5096A0AB20D03EC9B39D6 /* libPods-JJLISO8601DateFormatterApp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-JJLISO8601DateFormatterApp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		E81C6B99424A141FB2FDAB974ADB302F /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		E961745FEDAFFD05906D3A3D7E3F0ADB /* itoa.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = itoa.h; path = JJLISO8601DateFormatter/Classes/itoa.h; sourceTree = "<group>"; };
+		E9B58AC5638C97791FB0BD3B6FBE4E69 /* JJLISO8601DateFormatter.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = JJLISO8601DateFormatter.h; path = JJLISO8601DateFormatter/Classes/JJLISO8601DateFormatter.h; sourceTree = "<group>"; };
 		F869DFD242778C59CC456F141B21FB20 /* Pods-JJLISO8601DateFormatterApp-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-JJLISO8601DateFormatterApp-frameworks.sh"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		117AF83A002733ECB1312883289C7AF6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				350DB5AB291E39FBAAD8B0969E297F6B /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3A6468E4FED0B81E3DB22B27284ACEF8 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -95,81 +97,53 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		DA131459085223ECCC5FD93B12AB7309 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				AE2C7E17C127D8A82787850197FD00C6 /* Foundation.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0706EC527FD5056B2888916C4E0FE589 /* Development Pods */ = {
+		12A924984E538D886AB54512B592389C /* Support Files */ = {
 			isa = PBXGroup;
 			children = (
-				27484A1610B3C38CEA1A6477A253E07A /* JJLISO8601DateFormatter */,
-			);
-			name = "Development Pods";
-			sourceTree = "<group>";
-		};
-		27484A1610B3C38CEA1A6477A253E07A /* JJLISO8601DateFormatter */ = {
-			isa = PBXGroup;
-			children = (
-				A2C69DBBD04CBB0506F8FE8B64F9059D /* itoa.c */,
-				E961745FEDAFFD05906D3A3D7E3F0ADB /* itoa.h */,
-				081286D2549C424FC1132B778548EC48 /* JJLInternal.c */,
-				DA3DC1FCD88ABF8317054317FC4EFDAF /* JJLInternal.h */,
-				DEADA3035E555B5937577F09D85A7A1E /* JJLISO8601DateFormatter.h */,
-				34EE84886CB64E8830B7D973C4B526BF /* JJLISO8601DateFormatter.m */,
-				CBF0BA5D654516452841B80A28F2CEC9 /* Pod */,
-				52A27A43ABADF5AE0BCA316AF1FA741D /* Support Files */,
-				A04FDFA1CC3016A3AD24A2DC15656454 /* Vendor */,
-			);
-			name = JJLISO8601DateFormatter;
-			path = ../..;
-			sourceTree = "<group>";
-		};
-		52A27A43ABADF5AE0BCA316AF1FA741D /* Support Files */ = {
-			isa = PBXGroup;
-			children = (
-				9CB28C8D4E7EAC30D48047677F890194 /* JJLISO8601DateFormatter.xcconfig */,
-				1AEA7DF96ED10E325B47A4CE52D0959F /* JJLISO8601DateFormatter-dummy.m */,
-				93FED9F16232264C4A252AFFD3226787 /* JJLISO8601DateFormatter-prefix.pch */,
+				BC2317F7D9278F7699C678263BE85F56 /* JJLISO8601DateFormatter.xcconfig */,
+				7F048A37A411E3AA7008C3A3AF1EDBB4 /* JJLISO8601DateFormatter-dummy.m */,
+				BD7D4361DDFB7F3B3DBFAFCF16A78737 /* JJLISO8601DateFormatter-prefix.pch */,
 			);
 			name = "Support Files";
 			path = "Example/Pods/Target Support Files/JJLISO8601DateFormatter";
 			sourceTree = "<group>";
 		};
-		538B46E79FD7CC3F182614387578C9C8 /* tzdb */ = {
+		6D92654134A7ADB5A0D3BBD5CC0A7FA5 /* JJLISO8601DateFormatter */ = {
 			isa = PBXGroup;
 			children = (
-				985A7B0D788708B5D36F559D35C55C27 /* localtime.c */,
-				59F5E17548767E5C3EE47EF46AF2F315 /* private.h */,
-				53A71CCBD97342B3C34FF19163658E5B /* tzfile.h */,
+				B6862DB04EACFF95C90922C880645CC0 /* itoa.h */,
+				130DEE9EED28AD200605E8256A05368F /* itoa.c */,
+				8473B8E185D81C15DF2CA2CA5D338146 /* JJLInternal.h */,
+				6D8C7BDBA63AC8F4CF0DC7049F7B2AAE /* JJLInternal.c */,
+				E9B58AC5638C97791FB0BD3B6FBE4E69 /* JJLISO8601DateFormatter.h */,
+				442CE53A66AF7CF0D1287FD4D0D086C8 /* JJLISO8601DateFormatter.m */,
+				E79A4A3A059780614FA76E5D7F6B6AD2 /* Pod */,
+				12A924984E538D886AB54512B592389C /* Support Files */,
 			);
-			path = tzdb;
+			name = JJLISO8601DateFormatter;
+			path = ../..;
+			sourceTree = "<group>";
+		};
+		751B8D85DBD95633C3935C91C96D167B /* Development Pods */ = {
+			isa = PBXGroup;
+			children = (
+				6D92654134A7ADB5A0D3BBD5CC0A7FA5 /* JJLISO8601DateFormatter */,
+			);
+			name = "Development Pods";
 			sourceTree = "<group>";
 		};
 		7DB346D0F39D3F0E887471402A8071AB = {
 			isa = PBXGroup;
 			children = (
 				93A4A3777CF96A4AAC1D13BA6DCCEA73 /* Podfile */,
-				0706EC527FD5056B2888916C4E0FE589 /* Development Pods */,
+				751B8D85DBD95633C3935C91C96D167B /* Development Pods */,
 				BC3CA7F9E30CC8F7E2DD044DD34432FC /* Frameworks */,
 				C4291803BFD75F3E2CED22B4EF704AC8 /* Products */,
 				E0098C7A07B7C983C9A466AEEBE59559 /* Targets Support Files */,
 			);
-			sourceTree = "<group>";
-		};
-		A04FDFA1CC3016A3AD24A2DC15656454 /* Vendor */ = {
-			isa = PBXGroup;
-			children = (
-				538B46E79FD7CC3F182614387578C9C8 /* tzdb */,
-			);
-			name = Vendor;
-			path = JJLISO8601DateFormatter/Classes/Vendor;
 			sourceTree = "<group>";
 		};
 		BC3CA7F9E30CC8F7E2DD044DD34432FC /* Frameworks */ = {
@@ -188,16 +162,6 @@
 				A2AE74CBDAE974042003CA316366042F /* libPods-JJLISO8601DateFormatterTesting.a */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		CBF0BA5D654516452841B80A28F2CEC9 /* Pod */ = {
-			isa = PBXGroup;
-			children = (
-				1DA93BE599B9A7026A9621635676B5C2 /* JJLISO8601DateFormatter.podspec */,
-				CC760E14D4BD06BBC575F02F2962AC58 /* LICENSE */,
-				E81C6B99424A141FB2FDAB974ADB302F /* README.md */,
-			);
-			name = Pod;
 			sourceTree = "<group>";
 		};
 		D2D6B4F8BB0FD95075B87F045A1A3C82 /* Pods-JJLISO8601DateFormatterApp */ = {
@@ -247,31 +211,39 @@
 			name = "Targets Support Files";
 			sourceTree = "<group>";
 		};
+		E79A4A3A059780614FA76E5D7F6B6AD2 /* Pod */ = {
+			isa = PBXGroup;
+			children = (
+				D212C7AE347D7E6DFE590972EE5B27D2 /* JJLISO8601DateFormatter.podspec */,
+				3FD8A8B67B7B6F37FEB12CCFF153749C /* LICENSE */,
+				7339C2B7A05725E83367FFA4E0A38ECE /* README.md */,
+			);
+			name = Pod;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
-		E4F23E19060DA456A949B063BA1C58F9 /* Headers */ = {
+		6DE5C765ECBB71100740A67D2C36D5E1 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4BC88BDD281B5F7F5B43875B8B4EE672 /* itoa.h in Headers */,
-				CC300BC2F3A7D73F08BC9231DE3003F8 /* JJLInternal.h in Headers */,
-				CE7309761AB70FDC31E7FDA40D720987 /* JJLISO8601DateFormatter.h in Headers */,
-				FAAAEFAEA00A5872A3DB69E0E7B5A98C /* private.h in Headers */,
-				585835D758700BD8D40AD9DB5DB2A48B /* tzfile.h in Headers */,
+				B75A6EC1C928279B770DEB998673AA21 /* itoa.h in Headers */,
+				785D82D42124501D0A0C8D88A3D01AE8 /* JJLInternal.h in Headers */,
+				5C78597F57AFF20AC4B0C46D25CF9C96 /* JJLISO8601DateFormatter.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		47919B7FC5399757C3E0F2DEE88D0FAF /* JJLISO8601DateFormatter */ = {
+		0CAAD3626ADDD858CA71D85699F6BA97 /* JJLISO8601DateFormatter */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 22CFD9B7807AA93E53CBA8701069E1F9 /* Build configuration list for PBXNativeTarget "JJLISO8601DateFormatter" */;
+			buildConfigurationList = 6D1F0240C1C92A2988265927166E9940 /* Build configuration list for PBXNativeTarget "JJLISO8601DateFormatter" */;
 			buildPhases = (
-				585D65BFE09EBF9682CE8AF23F5CEC81 /* Sources */,
-				DA131459085223ECCC5FD93B12AB7309 /* Frameworks */,
-				E4F23E19060DA456A949B063BA1C58F9 /* Headers */,
+				15C07CE8A0BB459F790F8725B50E15DC /* Sources */,
+				117AF83A002733ECB1312883289C7AF6 /* Frameworks */,
+				6DE5C765ECBB71100740A67D2C36D5E1 /* Headers */,
 			);
 			buildRules = (
 			);
@@ -337,7 +309,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				47919B7FC5399757C3E0F2DEE88D0FAF /* JJLISO8601DateFormatter */,
+				0CAAD3626ADDD858CA71D85699F6BA97 /* JJLISO8601DateFormatter */,
 				652D36B5E8019FEFABC0CA2FDCB61B74 /* Pods-JJLISO8601DateFormatterApp */,
 				9C8127C18E3F14077DD4D602A77F5022 /* Pods-JJLISO8601DateFormatterTesting */,
 			);
@@ -353,15 +325,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		585D65BFE09EBF9682CE8AF23F5CEC81 /* Sources */ = {
+		15C07CE8A0BB459F790F8725B50E15DC /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2E84D288C8F380A42A2F5BE256DE148A /* itoa.c in Sources */,
-				E287154790AF2C4405615592E0A92904 /* JJLInternal.c in Sources */,
-				E0F213C7ECDC442D140B4B3814E1AF61 /* JJLISO8601DateFormatter-dummy.m in Sources */,
-				75945B0C7ED037B8A02AC66A16223D23 /* JJLISO8601DateFormatter.m in Sources */,
-				1DC4D2866AA8AA160F972E24060A7C1A /* localtime.c in Sources */,
+				9E0BF9F5F256BCB1E744A0C853DCC333 /* itoa.c in Sources */,
+				DB9A9C475109A5AB75F4821C53B202C4 /* JJLInternal.c in Sources */,
+				B46AEA831C42CDE153E3899D7858EB9B /* JJLISO8601DateFormatter-dummy.m in Sources */,
+				A35F0AA6BE6D222E73EA39EB319C102E /* JJLISO8601DateFormatter.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -379,18 +350,67 @@
 		5E016FC8CA54615760F895FCCFD0AED5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = JJLISO8601DateFormatter;
-			target = 47919B7FC5399757C3E0F2DEE88D0FAF /* JJLISO8601DateFormatter */;
+			target = 0CAAD3626ADDD858CA71D85699F6BA97 /* JJLISO8601DateFormatter */;
 			targetProxy = 0FC86D37BCD6BC94AFCFC8EAD72CE82C /* PBXContainerItemProxy */;
 		};
 		F5BD2B82A593B24997E13EDF7AFAB0AC /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = JJLISO8601DateFormatter;
-			target = 47919B7FC5399757C3E0F2DEE88D0FAF /* JJLISO8601DateFormatter */;
+			target = 0CAAD3626ADDD858CA71D85699F6BA97 /* JJLISO8601DateFormatter */;
 			targetProxy = 22FFBFEF7631C47CDF4091E45D4A8310 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		0741A18E971C353854114668260201F6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = BC2317F7D9278F7699C678263BE85F56 /* JJLISO8601DateFormatter.xcconfig */;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
+				GCC_PREFIX_HEADER = "Target Support Files/JJLISO8601DateFormatter/JJLISO8601DateFormatter-prefix.pch";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOLFLAGS = "";
+				PRIVATE_HEADERS_FOLDER_PATH = "";
+				PRODUCT_MODULE_NAME = JJLISO8601DateFormatter;
+				PRODUCT_NAME = JJLISO8601DateFormatter;
+				PUBLIC_HEADERS_FOLDER_PATH = "";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		1434EA4764F0CD7E81A1B967697EE39B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = BC2317F7D9278F7699C678263BE85F56 /* JJLISO8601DateFormatter.xcconfig */;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
+				GCC_PREFIX_HEADER = "Target Support Files/JJLISO8601DateFormatter/JJLISO8601DateFormatter-prefix.pch";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOLFLAGS = "";
+				PRIVATE_HEADERS_FOLDER_PATH = "";
+				PRODUCT_MODULE_NAME = JJLISO8601DateFormatter;
+				PRODUCT_NAME = JJLISO8601DateFormatter;
+				PUBLIC_HEADERS_FOLDER_PATH = "";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
 		54BA4A2E714BBD7D28134F96254C8801 /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 442D1271CA4DE8276FDBF72B3C65EB7D /* Pods-JJLISO8601DateFormatterApp.release.xcconfig */;
@@ -476,31 +496,6 @@
 				SYMROOT = "${SRCROOT}/../build";
 			};
 			name = Debug;
-		};
-		56875AF3F3F8854FF1C8C4DB748C121A /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9CB28C8D4E7EAC30D48047677F890194 /* JJLISO8601DateFormatter.xcconfig */;
-			buildSettings = {
-				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
-				GCC_PREFIX_HEADER = "Target Support Files/JJLISO8601DateFormatter/JJLISO8601DateFormatter-prefix.pch";
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
-				OTHER_LDFLAGS = "";
-				OTHER_LIBTOOLFLAGS = "";
-				PRIVATE_HEADERS_FOLDER_PATH = "";
-				PRODUCT_MODULE_NAME = JJLISO8601DateFormatter;
-				PRODUCT_NAME = JJLISO8601DateFormatter;
-				PUBLIC_HEADERS_FOLDER_PATH = "";
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
 		};
 		58CE816B060A41D32CEC095441D0E3E0 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -605,30 +600,6 @@
 			};
 			name = Debug;
 		};
-		B2A3D25866F4897D3CCCBB5734CB615B /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9CB28C8D4E7EAC30D48047677F890194 /* JJLISO8601DateFormatter.xcconfig */;
-			buildSettings = {
-				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
-				GCC_PREFIX_HEADER = "Target Support Files/JJLISO8601DateFormatter/JJLISO8601DateFormatter-prefix.pch";
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
-				OTHER_LDFLAGS = "";
-				OTHER_LIBTOOLFLAGS = "";
-				PRIVATE_HEADERS_FOLDER_PATH = "";
-				PRODUCT_MODULE_NAME = JJLISO8601DateFormatter;
-				PRODUCT_NAME = JJLISO8601DateFormatter;
-				PUBLIC_HEADERS_FOLDER_PATH = "";
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
 		EA8881E2061ACA9F19FA616AAB5FABC5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = AF9AED66758FE30DB768B7B20EC4551D /* Pods-JJLISO8601DateFormatterApp.debug.xcconfig */;
@@ -654,20 +625,20 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		22CFD9B7807AA93E53CBA8701069E1F9 /* Build configuration list for PBXNativeTarget "JJLISO8601DateFormatter" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				B2A3D25866F4897D3CCCBB5734CB615B /* Debug */,
-				56875AF3F3F8854FF1C8C4DB748C121A /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		2D8E8EC45A3A1A1D94AE762CB5028504 /* Build configuration list for PBXProject "Pods" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				553022A828EE1991F07D2D73F565AEF8 /* Debug */,
 				58CE816B060A41D32CEC095441D0E3E0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6D1F0240C1C92A2988265927166E9940 /* Build configuration list for PBXNativeTarget "JJLISO8601DateFormatter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1434EA4764F0CD7E81A1B967697EE39B /* Debug */,
+				0741A18E971C353854114668260201F6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
