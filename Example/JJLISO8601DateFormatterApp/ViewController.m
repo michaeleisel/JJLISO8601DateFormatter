@@ -9,41 +9,61 @@
 
 @implementation ViewController
 
+#define SECONDS (1)
+#define MINUTES (60 * SECONDS)
+#define HOURS (60 * MINUTES)
+#define DAYS (24 * HOURS)
+#define YEARS (365 * DAYS)
+
 - (void)viewDidLoad {
     [super viewDidLoad];
 
     // [self testSimpleFormatting];
     NSTimeZone *brazilTimeZone = [NSTimeZone timeZoneWithAbbreviation:@"BRT"];
     NSISO8601DateFormatOptions opts =
-    NSISO8601DateFormatWithInternetDateTime | NSISO8601DateFormatWithDashSeparatorInDate | NSISO8601DateFormatWithColonSeparatorInTime | NSISO8601DateFormatWithColonSeparatorInTimeZone;
-    NSString *str = [NSISO8601DateFormatter stringFromDate:[NSDate date] timeZone:brazilTimeZone formatOptions:opts];
-    NSISO8601DateFormatter *appleFormatter = [[NSISO8601DateFormatter alloc] init];
-    JJLISO8601DateFormatter *myFormatter = [[JJLISO8601DateFormatter alloc] init];
-    NSDate *date = [NSDate dateWithTimeIntervalSinceNow:-60 * 60 * 24];
-    /*({
-        CFTimeInterval start = CACurrentMediaTime();
-        for (NSInteger i = 0; i < 1e6; i++) {
-            [appleFormatter stringFromDate:date];
-        }
-        CFTimeInterval end = CACurrentMediaTime();
-        NSLog(@"%@", @(end - start));
-    });
-    usleep(5e5);*/
-    ({
-        CFTimeInterval start = CACurrentMediaTime();
-        for (NSInteger i = 0; i < 1e6; i++) {
-            [myFormatter stringFromDate:date];
-        }
-        CFTimeInterval end = CACurrentMediaTime();
-        NSLog(@"%@", @(end - start));
-    });
+    NSISO8601DateFormatWithInternetDateTime | NSISO8601DateFormatWithDashSeparatorInDate | NSISO8601DateFormatWithColonSeparatorInTime | NSISO8601DateFormatWithColonSeparatorInTimeZone | NSISO8601DateFormatWithFractionalSeconds;
+
+    NSLog(@"Recent dates");
+    NSDate *startDate = [NSDate dateWithTimeIntervalSinceNow:-15 * DAYS];
+    NSDate *endDate = [NSDate dateWithTimeIntervalSinceNow:15 * DAYS];
+    [self _testPerformanceWithStartDate:startDate endDate:endDate];
+
+    NSLog(@"Dates from 1970 until now");
+    startDate = [NSDate dateWithTimeIntervalSince1970:0];
+    [self _testPerformanceWithStartDate:startDate endDate:endDate];
 }
 
-#define SECONDS (1)
-#define MINUTES (60 * SECONDS)
-#define HOURS (60 * MINUTES)
-#define DAYS (24 * HOURS)
-#define YEARS (365 * DAYS)
+- (void)_testPerformanceWithStartDate:(NSDate *)startDate endDate:(NSDate *)endDate
+{
+    NSISO8601DateFormatter *appleFormatter = [[NSISO8601DateFormatter alloc] init];
+    JJLISO8601DateFormatter *myFormatter = [[JJLISO8601DateFormatter alloc] init];
+    NSInteger iterations = 1e6;
+    NSTimeInterval endInterval = endDate.timeIntervalSince1970;
+    NSTimeInterval startInterval = startDate.timeIntervalSince1970;
+    NSTimeInterval increment = (endInterval - startInterval) / iterations;
+    NSMutableArray <NSDate *> *dates = [NSMutableArray array];
+    for (NSInteger interval = startInterval; interval < endInterval; interval += increment) {
+        NSDate *date = [NSDate dateWithTimeIntervalSince1970:interval];
+        [dates addObject:date];
+    }
+    ({
+        CFTimeInterval startTime = CACurrentMediaTime();
+        for (NSDate *date in dates) {
+            [myFormatter stringFromDate:date];
+        }
+        CFTimeInterval endTime = CACurrentMediaTime();
+        NSLog(@"JJL: %@", @(endTime - startTime));
+    });
+    usleep(5e5);
+    ({
+        CFTimeInterval startTime = CACurrentMediaTime();
+        for (NSDate *date in dates) {
+            [appleFormatter stringFromDate:date];
+        }
+        CFTimeInterval endTime = CACurrentMediaTime();
+        NSLog(@"Apple: %@", @(endTime - startTime));
+    });
+}
 
 __used static NSString *binaryRep(NSISO8601DateFormatOptions opts) {
     NSDictionary<NSNumber *, NSString *>*optionToString = @{ @(NSISO8601DateFormatWithYear): @"year",

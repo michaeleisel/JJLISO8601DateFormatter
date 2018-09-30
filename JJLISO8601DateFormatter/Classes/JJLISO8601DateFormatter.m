@@ -123,6 +123,7 @@ static inline NSString *JJLStringFromDate(NSDate *date, NSTimeZone *timeZone, NS
     /*if (!timeZone) {
         timeZone = [NSTimeZone defaultTimeZone];
     }*/
+    int zz = [[NSTimeZone defaultTimeZone] secondsFromGMTForDate:date];
     double time = date.timeIntervalSince1970;// - [timeZone secondsFromGMTForDate:date];
     char buffer[kJJLMaxLength] = {0};
     char *bufferPtr = (char *)buffer;

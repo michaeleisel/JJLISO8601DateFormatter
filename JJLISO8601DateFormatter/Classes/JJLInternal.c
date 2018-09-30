@@ -50,7 +50,7 @@ static inline void JJLFillBufferWithFractionalSeconds(double time, JJLString *st
     }
     JJLPushBuffer(string, charsPtr, length);*/
     // the printf way:
-    char buffer[6];
+    char buffer[7];
     char *bufferPtr = (char *)buffer;
     // Use the fractionalComponent to be sure that we don't pass in some huge double that would fill the buffer before it hits the fractional component
     snprintf(bufferPtr, sizeof(buffer), "%.3f", fractionalComponent);
