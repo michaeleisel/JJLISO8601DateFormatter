@@ -6,6 +6,7 @@
 #import <CoreFoundation/CFDateFormatter.h>
 #import <pthread.h>
 #import <math.h>
+#import <stdio.h>
 
 #import "JJLInternal.h"
 #import "itoa.h"
@@ -39,7 +40,7 @@ static inline void JJLFillBufferWithUpTo19(int month, JJLString *string) {
 static inline void JJLFillBufferWithFractionalSeconds(double time, JJLString *string) {
     double unused = 0;
     double fractionalComponent = modf(time, &unused);
-    int32_t millis = (int32_t)lround(fractionalComponent * 1000);
+    /*int32_t millis = (int32_t)lround(fractionalComponent * 1000);
     char chars[5] = {0}; // Extra byte just being extra safe
     char *charsPtr = (char *)chars;
     i32toa(millis, charsPtr);
@@ -47,7 +48,15 @@ static inline void JJLFillBufferWithFractionalSeconds(double time, JJLString *st
     for (int i = 0; i < 3 - length; i++) {
         JJLPush(string, '0');
     }
-    JJLPushBuffer(string, charsPtr, length);
+    JJLPushBuffer(string, charsPtr, length);*/
+    // the printf way:
+    char buffer[6];
+    char *bufferPtr = (char *)buffer;
+    // Use the fractionalComponent to be sure that we don't pass in some huge double that would fill the buffer before it hits the fractional component
+    snprintf(bufferPtr, sizeof(buffer), "%.3f", fractionalComponent);
+    char *decimalPointStr = strchr(buffer, '.');
+    char *decimalStr = decimalPointStr + 1;
+    JJLPushBuffer(string, decimalStr, (int32_t)strlen(decimalStr));
 }
 
 // Requires buffer to be at least 5 bytes
@@ -146,6 +155,14 @@ static inline bool JJLIsLeapYear(int32_t year) {
     }
 }*/
 
+bool JJLGetShowFractionalSeconds(CFISO8601DateFormatOptions options) {
+    if (__builtin_available(iOS 11.0, *)) {
+        return !!(options & kCFISO8601DateFormatWithFractionalSeconds);
+    } else {
+        return false;
+    }
+}
+
 void JJLFillBufferForDate(char *buffer, double timeInSeconds, int32_t firstWeekday, bool local, CFISO8601DateFormatOptions options) {
     if ((options & (options - 1)) == 0) {
         return;
@@ -153,6 +170,14 @@ void JJLFillBufferForDate(char *buffer, double timeInSeconds, int32_t firstWeekd
     JJLString string = {0};
     string.buffer = buffer;
     struct tm components = {0};
+
+    bool showFractionalSeconds = JJLGetShowFractionalSeconds(options);
+
+    double unused = 0;
+    double fractionalComponent = modf(timeInSeconds, &unused);
+    if (fractionalComponent >= 0.9995) {
+        timeInSeconds = lround(timeInSeconds);
+    }
     time_t integerTime = (time_t)timeInSeconds;
     if (local) {
         localtime_r(&integerTime, &components);
@@ -229,7 +254,7 @@ void JJLFillBufferForDate(char *buffer, double timeInSeconds, int32_t firstWeekd
         JJLFillBufferWithUpTo69(components.tm_sec, &string);
         // @availability is not available, so use __builtin instead
         if (__builtin_available(iOS 11.0, *)) {
-            if (options & kCFISO8601DateFormatWithFractionalSeconds) {
+            if (showFractionalSeconds) {
                 JJLPush(&string, '.');
                 JJLFillBufferWithFractionalSeconds(timeInSeconds, &string);
             }
