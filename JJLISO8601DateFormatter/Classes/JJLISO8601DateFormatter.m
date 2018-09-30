@@ -11,30 +11,49 @@
 @implementation JJLISO8601DateFormatter
 
 static NSTimeZone *sGMTTimeZone = nil;
+static NSInteger sFirstWeekday = 0;
 
 @synthesize formatOptions = _formatOptions;
 @synthesize timeZone = _timeZone;
 
-static void JJLPerformInitialSetupIfNecessary() {
+static void *kJJLCurrentLocaleContext = &kJJLCurrentLocaleContext;
+
+// Thread-safe because sFirstWeekday is the only thing being changed, and it is a simple primitive
++ (void)_localeDidChange
+{
+    NSCalendar *gregorianCalendar = [NSCalendar calendarWithIdentifier:NSCalendarIdentifierGregorian];
+    gregorianCalendar.locale = [NSLocale currentLocale];
+    sFirstWeekday = gregorianCalendar.firstWeekday;
+}
+
+- (void)_performInitialSetupIfNecessary
+{
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sGMTTimeZone = [[NSTimeZone timeZoneWithName:@"GMT"] retain];
+        [[NSNotificationCenter defaultCenter] addObserver:[self class] selector:@selector(_localeDidChange) name:NSCurrentLocaleDidChangeNotification object:nil];
+        [[self class] _localeDidChange];
     });
 }
 
+// make full test plan: test all supported OSes, test performance, and test unit tests
+// -Werror?
 // todo: does the C assert function turn off in release?
 // allow for "+" unary operator
 // asserts for invalid minute, year, etc.?
 // todo: sizeof long?
 // todo: max length correct? large numbers?
+// all calls to -timeZone must go through property, not ivar, to be atomic
+// use ios 9 and not 10 as minimum?
 // distant future? distant past?
 // todo: NSFormatter subclassing and secure coding!
 // todo: do MRC properties automatically retain and release?
+// clang format?
 -(id)init
 {
     self = [super init];
     if (self) {
-        JJLPerformInitialSetupIfNecessary();
+        [self _performInitialSetupIfNecessary];
         _formatOptions = NSISO8601DateFormatWithInternetDateTime | NSISO8601DateFormatWithDashSeparatorInDate | NSISO8601DateFormatWithColonSeparatorInTime | NSISO8601DateFormatWithColonSeparatorInTimeZone;
         _timeZone = sGMTTimeZone;
     }
@@ -56,15 +75,20 @@ static void JJLPerformInitialSetupIfNecessary() {
 
 - (NSTimeZone *)timeZone
 {
+    NSTimeZone *timeZone = nil;
     @synchronized(self) {
-        return _timeZone;
+        timeZone = _timeZone;
     }
+    return timeZone;
 }
 
 - (void)setTimeZone:(NSTimeZone *)timeZone
 {
     @synchronized(self) {
+        NSTimeZone *oldTimeZone = timeZone;
         _timeZone = timeZone ?: sGMTTimeZone;
+        [_timeZone retain];
+        [oldTimeZone autorelease];
     }
 }
 
@@ -93,13 +117,17 @@ BOOL JJLIsValidFormatOptions(NSISO8601DateFormatOptions formatOptions) {
 
 static inline NSString *JJLStringFromDate(NSDate *date, NSTimeZone *timeZone, NSISO8601DateFormatOptions formatOptions)
 {
+    if (!date) {
+        return nil;
+    }
     /*if (!timeZone) {
         timeZone = [NSTimeZone defaultTimeZone];
     }*/
-    time_t time = date.timeIntervalSince1970;// - [timeZone secondsFromGMTForDate:date];
+    double time = date.timeIntervalSince1970;// - [timeZone secondsFromGMTForDate:date];
     char buffer[kJJLMaxLength] = {0};
     char *bufferPtr = (char *)buffer;
-    JJLFillBufferForDate(bufferPtr, time, NO, (CFISO8601DateFormatOptions)formatOptions);
+    int32_t firstWeekday = (int32_t)sFirstWeekday; // Use a copy of sFirstWeekday in case it changes
+    JJLFillBufferForDate(bufferPtr, time, firstWeekday, NO, (CFISO8601DateFormatOptions)formatOptions);
     return CFAutorelease(CFStringCreateWithCString(kCFAllocatorDefault, buffer, kCFStringEncodingUTF8));
 }
 

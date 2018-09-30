@@ -31,6 +31,7 @@ TODO: Add long description of the pod here.
   s.ios.deployment_target = '10.0'
 
   s.source_files = 'JJLISO8601DateFormatter/Classes/**/*'
+  s.public_header_files = 'JJLISO8601DateFormatter/Classes/JJLISO8601DateFormatter.h'
 
   s.requires_arc = false
   
@@ -38,7 +39,6 @@ TODO: Add long description of the pod here.
   #   'JJLISO8601DateFormatter' => ['JJLISO8601DateFormatter/Assets/*.png']
   # }
 
-  # s.public_header_files = 'Pod/Classes/**/*.h'
   # s.frameworks = 'UIKit', 'MapKit'
   # s.dependency 'AFNetworking', '~> 2.3'
 end

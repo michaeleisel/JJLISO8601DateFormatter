@@ -5,6 +5,7 @@
 #import <string.h>
 #import <CoreFoundation/CFDateFormatter.h>
 #import <pthread.h>
+#import <math.h>
 
 #import "JJLInternal.h"
 #import "itoa.h"
@@ -33,6 +34,20 @@ static inline void JJLFillBufferWithUpTo19(int month, JJLString *string) {
         JJLPush(string, '1');
         JJLPush(string, month - 10 + '0');
     }
+}
+
+static inline void JJLFillBufferWithFractionalSeconds(double time, JJLString *string) {
+    double unused = 0;
+    double fractionalComponent = modf(time, &unused);
+    int32_t millis = (int32_t)lround(fractionalComponent * 1000);
+    char chars[5] = {0}; // Extra byte just being extra safe
+    char *charsPtr = (char *)chars;
+    i32toa(millis, charsPtr);
+    int length = (int)strlen(charsPtr);
+    for (int i = 0; i < 3 - length; i++) {
+        JJLPush(string, '0');
+    }
+    JJLPushBuffer(string, charsPtr, length);
 }
 
 // Requires buffer to be at least 5 bytes
@@ -69,7 +84,7 @@ static inline void JJLFillBufferWithYear(int year, JJLString *string) {
     string->length += newEnd - string->buffer;
 }
 
-static inline void JJLFillBufferWithUpTo60(int time, JJLString *string) {
+static inline void JJLFillBufferWithUpTo69(int time, JJLString *string) {
     assert(0 <= time && time <= 60);
     int32_t tens = 0;
     if (time >= 30) {
@@ -131,29 +146,32 @@ static inline bool JJLIsLeapYear(int32_t year) {
     }
 }*/
 
-void JJLFillBufferForDate(char *buffer, time_t timeInSeconds, bool local, CFISO8601DateFormatOptions options) {
+void JJLFillBufferForDate(char *buffer, double timeInSeconds, int32_t firstWeekday, bool local, CFISO8601DateFormatOptions options) {
     if ((options & (options - 1)) == 0) {
         return;
     }
     JJLString string = {0};
     string.buffer = buffer;
     struct tm components = {0};
+    time_t integerTime = (time_t)timeInSeconds;
     if (local) {
-        localtime_r(&timeInSeconds, &components);
+        localtime_r(&integerTime, &components);
     } else {
-        gmtime_r(&timeInSeconds, &components);
+        gmtime_r(&integerTime, &components);
     }
     // timeInSeconds -= components.tm_gmtoff;
     bool showYear = !!(options & kCFISO8601DateFormatWithYear);
     bool showDateSeparator = !!(options & kCFISO8601DateFormatWithDashSeparatorInDate);
     bool showMonth = !!(options & kCFISO8601DateFormatWithMonth);
     bool showDay = !!(options & kCFISO8601DateFormatWithDay);
-    bool showWeekOfYear = !!(options & kCFISO8601DateFormatWithWeekOfYear);
+    bool isInternetDateTime = (options & kCFISO8601DateFormatWithInternetDateTime) == kCFISO8601DateFormatWithInternetDateTime;
+    // For some reason, the week of the year is never shown if all the components of internet date time are shown
+    bool showWeekOfYear = !isInternetDateTime && !!(options & kCFISO8601DateFormatWithWeekOfYear);
     bool showDate = showYear || showMonth || showDay || showWeekOfYear;
-    int32_t daysAfterMonday = (components.tm_wday - 1 + 7) % 7;
+    int32_t daysAfterFirstWeekday = (components.tm_wday - firstWeekday + 7) % 7;
     int32_t year = components.tm_year + 1900;
-    int32_t daysTillMonday = (7 - daysAfterMonday) % 7;
-    bool usePreviousYear = showWeekOfYear && components.tm_yday < daysTillMonday;
+    int32_t daysTillFirstWeekday = 7 - daysAfterFirstWeekday;
+    bool usePreviousYear = showWeekOfYear && components.tm_yday < daysTillFirstWeekday;
     if (showYear) {
         int32_t yearToShow = usePreviousYear ? year - 1 : year;
         JJLFillBufferWithYear(yearToShow, &string);
@@ -162,26 +180,29 @@ void JJLFillBufferForDate(char *buffer, time_t timeInSeconds, bool local, CFISO8
         if (showDateSeparator && showYear) {
             JJLPush(&string, '-');
         }
-        JJLFillBufferWithUpTo60(components.tm_mon + 1, &string);
+        JJLFillBufferWithUpTo69(components.tm_mon + 1, &string);
     }
     if (showWeekOfYear) {
+        if (showDateSeparator && (showYear || showMonth)) {
+            JJLPush(&string, '-');
+        }
         JJLPush(&string, 'W');
         // todo: figure out if it's locale-sensitive, because the first week of the year can change
-        int32_t daysToDivide = components.tm_yday - daysAfterMonday;
+        int32_t daysToDivide = components.tm_yday - daysAfterFirstWeekday;
         if (usePreviousYear) {
             daysToDivide += JJLIsLeapYear(year - 1) ? 366 : 365;
         }
         int32_t week = daysToDivide / 7;
-        JJLFillBufferWithUpTo60(week + 1, &string);
+        JJLFillBufferWithUpTo69(week + 1, &string);
     }
     if (showDay) {
         if (showDateSeparator && (showYear || showMonth || showWeekOfYear)) {
             JJLPush(&string, '-');
         }
         if (showWeekOfYear) {
-            JJLFillBufferWithUpTo19(daysAfterMonday, &string);
+            JJLFillBufferWithUpTo19(daysTillFirstWeekday, &string);
         } else if (showMonth) {
-            JJLFillBufferWithUpTo60(components.tm_mday, &string);
+            JJLFillBufferWithUpTo69(components.tm_mday, &string);
         } else {
             // Could be optimized, but seems like a rare case
             char *newEnd = i32toa(components.tm_yday + 1, &(string.buffer[string.length]));
@@ -197,15 +218,24 @@ void JJLFillBufferForDate(char *buffer, time_t timeInSeconds, bool local, CFISO8
             char separator = timeSeparatorIsSpace ? ' ' : 'T';
             JJLPush(&string, separator);
         }
-        JJLFillBufferWithUpTo60(components.tm_hour, &string);
+        JJLFillBufferWithUpTo69(components.tm_hour, &string);
         if (showTimeSeparator) {
             JJLPush(&string, ':');
         }
-        JJLFillBufferWithUpTo60(components.tm_min, &string);
+        JJLFillBufferWithUpTo69(components.tm_min, &string);
         if (showTimeSeparator) {
             JJLPush(&string, ':');
         }
-        JJLFillBufferWithUpTo60(components.tm_sec, &string);
+        JJLFillBufferWithUpTo69(components.tm_sec, &string);
+        // @availability is not available, so use __builtin instead
+        if (__builtin_available(iOS 11.0, *)) {
+            if (options & kCFISO8601DateFormatWithFractionalSeconds) {
+                JJLPush(&string, '.');
+                JJLFillBufferWithFractionalSeconds(timeInSeconds, &string);
+            }
+        }
+    }
+    if (options & kCFISO8601DateFormatWithTimeZone) {
         JJLPush(&string, 'Z');
     }
 }

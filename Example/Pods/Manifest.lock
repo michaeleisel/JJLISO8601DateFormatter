@@ -1,16 +1,23 @@
 PODS:
   - JJLISO8601DateFormatter (0.1.0)
+  - OCMock (3.4.1)
 
 DEPENDENCIES:
   - JJLISO8601DateFormatter (from `../`)
+  - OCMock
+
+SPEC REPOS:
+  https://github.com/CocoaPods/Specs.git:
+    - OCMock
 
 EXTERNAL SOURCES:
   JJLISO8601DateFormatter:
     :path: "../"
 
 SPEC CHECKSUMS:
-  JJLISO8601DateFormatter: 55cad879e2b554b78d17049a99244e92f5be2d77
+  JJLISO8601DateFormatter: 444f6abd3159e1cd5a6d22c5d96e4064b999fb61
+  OCMock: 2cd0716969bab32a2283ff3a46fd26a8c8b4c5e3
 
-PODFILE CHECKSUM: e970eab2452f56da583723b4b0550831df99eb66
+PODFILE CHECKSUM: 49d15b4ac5986c55911d40f6338d734d2e611393
 
 COCOAPODS: 1.5.0

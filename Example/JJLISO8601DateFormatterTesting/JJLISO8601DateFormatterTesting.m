@@ -2,6 +2,7 @@
 
 #import <XCTest/XCTest.h>
 #import <JJLISO8601DateFormatter/JJLISO8601DateFormatter.h>
+#import <OCMock/OCMock.h>
 
 @interface JJLISO8601DateFormatterTesting : XCTestCase
 
@@ -73,25 +74,43 @@ __used static NSString *binaryTestRep(NSISO8601DateFormatOptions opts) {
     XCTAssertEqualObjects(_appleFormatter.timeZone, _myFormatter.timeZone, @"nil resetting should bring it back to the default");
 }
 
+// Note: swizzling apple library methods like these can cause flaky test failures
+- (void)_setLocale:(NSLocale *)locale
+{
+    OCMStub([NSLocale currentLocale]).andReturn(locale);
+    OCMStub([NSLocale autoupdatingCurrentLocale]).andReturn(locale);
+    [[NSNotificationCenter defaultCenter] postNotificationName:NSCurrentLocaleDidChangeNotification object:locale/*correct?*/];
+}
+
+- (void)testNilDate
+{
+    NSDate *date = nil;
+    XCTAssertEqualObjects([_appleFormatter stringFromDate:date], [_myFormatter stringFromDate:date]);
+}
+
 // leap seconds
 // neg nums
 - (void)testFormattingAcrossAllOptions
 {
     // NSTimeZone *brazilTimeZone = [NSTimeZone timeZoneWithAbbreviation:@"BRT"];
     // appleFormatter.timeZone = brazilTimeZone;
-    NSDate *date = [_appleFormatter dateFromString:@"2018-09-13T19:56:48Z"];
-    for (NSISO8601DateFormatOptions opts = 0; opts < (NSISO8601DateFormatOptions)(1 << 12); opts++) {
-        if (!JJLIsValidFormatOptions(opts)) {
-            continue;
+    NSISO8601DateFormatter *initialDateFormatter = [[NSISO8601DateFormatter alloc] init];
+    initialDateFormatter.formatOptions = initialDateFormatter.formatOptions | NSISO8601DateFormatWithFractionalSeconds;
+    NSDate *date = [initialDateFormatter dateFromString:@"2018-09-13T19:56:48.981Z"];
+    // Run through a couple locales with different starting days of the week
+    for (NSString *identifier in @[@"en_US", @"ar_IQ"]) {
+        NSLocale *locale = [NSLocale localeWithLocaleIdentifier:identifier];
+        [self _setLocale:locale];
+        for (NSISO8601DateFormatOptions options = 0; options < (NSISO8601DateFormatOptions)(1 << 12); options++) {
+            if (!JJLIsValidFormatOptions(options)) {
+                continue;
+            }
+            _appleFormatter.formatOptions = options;
+            _myFormatter.formatOptions = options;
+            NSString *appleString = [_appleFormatter stringFromDate:date];
+            NSString *myString = [_myFormatter stringFromDate:date];
+            XCTAssertEqualObjects(appleString, myString);
         }
-        _appleFormatter.formatOptions = opts;
-        _myFormatter.formatOptions = opts;
-        NSString *appleString = [_appleFormatter stringFromDate:date];
-        NSString *myString = [_myFormatter stringFromDate:date];
-        if (myString != appleString && ![appleString isEqualToString:myString]) {
-            printf("");
-        }
-        // XCTAssertEqualObjects(appleString, myString);
     }
 }
 

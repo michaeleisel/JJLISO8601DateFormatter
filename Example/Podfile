@@ -6,4 +6,5 @@ end
 
 target 'JJLISO8601DateFormatterTesting' do
   pod 'JJLISO8601DateFormatter', :path => '../'
+  pod 'OCMock'
 end
