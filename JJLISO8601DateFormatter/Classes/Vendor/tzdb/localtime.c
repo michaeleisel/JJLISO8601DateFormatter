@@ -16,15 +16,15 @@
 #include "tzfile.h"
 #include <fcntl.h>
 
-// #if defined THREAD_SAFE && THREAD_SAFE
+#if defined THREAD_SAFE && THREAD_SAFE
 # include <pthread.h>
 static pthread_mutex_t locallock = PTHREAD_MUTEX_INITIALIZER;
 static int lock(void) { return pthread_mutex_lock(&locallock); }
 static void unlock(void) { pthread_mutex_unlock(&locallock); }
-// #else
-// static int lock(void) { return 0; }
-// static void unlock(void) { }
-// #endif
+#else
+static int lock(void) { return 0; }
+static void unlock(void) { }
+#endif
 
 /* NETBSD_INSPIRED_EXTERN functions are exported to callers if
    NETBSD_INSPIRED is defined, and are private otherwise.  */
@@ -1280,7 +1280,7 @@ tzparse(const char *name, struct state *sp, bool lastditch)
 	return true;
 }
 
-void
+static void
 gmtload(struct state *const sp)
 {
 	if (tzload(gmt, sp, true) != 0)
@@ -1510,10 +1510,41 @@ localsub(struct state const *sp, time_t const *timep, int_fast32_t setname,
 	return result;
 }
 
-void
-JJLGmtSub(time_t const *timep, struct tm *tmp)
+#if NETBSD_INSPIRED
+
+struct tm *
+localtime_rz(struct state *sp, time_t const *timep, struct tm *tmp)
 {
-    gmtsub(gmtptr, timep, 0, tmp);
+  return localsub(sp, timep, 0, tmp);
+}
+
+#endif
+
+static struct tm *
+localtime_tzset(time_t const *timep, struct tm *tmp, bool setname)
+{
+  int err = lock();
+  if (err) {
+    errno = err;
+    return NULL;
+  }
+  if (setname || !lcl_is_set)
+    tzset_unlocked();
+  tmp = localsub(lclptr, timep, setname, tmp);
+  unlock();
+  return tmp;
+}
+
+struct tm *
+localtime(const time_t *timep)
+{
+  return localtime_tzset(timep, &tm, true);
+}
+
+struct tm *
+localtime_r(const time_t *timep, struct tm *tmp)
+{
+  return localtime_tzset(timep, tmp, false);
 }
 
 /*
@@ -1538,6 +1569,34 @@ gmtsub(struct state const *sp, time_t const *timep, int_fast32_t offset,
 #endif /* defined TM_ZONE */
 	return result;
 }
+
+/*
+* Re-entrant version of gmtime.
+*/
+
+struct tm *
+gmtime_r(const time_t *timep, struct tm *tmp)
+{
+  gmtcheck();
+  return gmtsub(gmtptr, timep, 0, tmp);
+}
+
+struct tm *
+gmtime(const time_t *timep)
+{
+  return gmtime_r(timep, &tm);
+}
+
+#ifdef STD_INSPIRED
+
+struct tm *
+offtime(const time_t *timep, long offset)
+{
+  gmtcheck();
+  return gmtsub(gmtptr, timep, offset, &tm);
+}
+
+#endif /* defined STD_INSPIRED */
 
 /*
 ** Return the number of leap years through the end of the given year
@@ -1669,6 +1728,27 @@ timesub(const time_t *timep, int_fast32_t offset,
  out_of_range:
 	errno = EOVERFLOW;
 	return NULL;
+}
+
+char *
+ctime(const time_t *timep)
+{
+/*
+** Section 4.12.3.2 of X3.159-1989 requires that
+**	The ctime function converts the calendar time pointed to by timer
+**	to local time in the form of a string. It is equivalent to
+**		asctime(localtime(timer))
+*/
+  struct tm *tmp = localtime(timep);
+  return tmp ? asctime(tmp) : NULL;
+}
+
+char *
+ctime_r(const time_t *timep, char *buf)
+{
+  struct tm mytm;
+  struct tm *tmp = localtime_r(timep, &mytm);
+  return tmp ? asctime_r(tmp, buf) : NULL;
 }
 
 /*
@@ -2081,7 +2161,7 @@ mktime_z(struct state *sp, struct tm *tmp)
 
 #endif
 
-/*time_t
+time_t
 mktime(struct tm *tmp)
 {
   time_t t;
@@ -2094,7 +2174,7 @@ mktime(struct tm *tmp)
   t = mktime_tzname(lclptr, tmp, true);
   unlock();
   return t;
-}*/
+}
 
 #ifdef STD_INSPIRED
 

@@ -19,7 +19,7 @@
 ** Information about time zone files.
 */
 
-///////// NOTE (JJLISO8601DateFormatter): this bit is added from Mac OS's tzfile.h for Xcode 10.0. It could change for future iOS versions!
+///////// NOTE (JJLISO8601DateFormatter): this bit is added from Mac OS's tzfile.h for Xcode 10.0. It could change in the future!
 /* Time zone object file directory */
 #ifndef TZDIR
 # if TARGET_OS_SIMULATOR || (TARGET_OS_OSX && __MAC_OS_X_VERSION_MIN_REQUIRED < __MAC_10_13)
