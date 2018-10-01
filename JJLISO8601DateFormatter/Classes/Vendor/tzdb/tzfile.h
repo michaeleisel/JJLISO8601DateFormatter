@@ -19,9 +19,15 @@
 ** Information about time zone files.
 */
 
+///////// NOTE (JJLISO8601DateFormatter): this bit is added from Mac OS's tzfile.h for Xcode 10.0. It could change for future iOS versions!
+/* Time zone object file directory */
 #ifndef TZDIR
-#define TZDIR	"/usr/share/zoneinfo" /* Time zone object file directory */
-#endif /* !defined TZDIR */
+# if TARGET_OS_SIMULATOR || (TARGET_OS_OSX && __MAC_OS_X_VERSION_MIN_REQUIRED < __MAC_10_13)
+#  define TZDIR   "/usr/share/zoneinfo"
+# else
+#  define TZDIR   "/var/db/timezone/zoneinfo"
+# endif
+#endif
 
 #ifndef TZDEFAULT
 #define TZDEFAULT	"/etc/localtime"
