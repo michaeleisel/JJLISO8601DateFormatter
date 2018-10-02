@@ -374,6 +374,41 @@ union local_storage {
 			sizeof tzdirslash + 1024)];
 };
 
+ssize_t JJLSafeReadInjection(int fd, void *buffer, size_t nbytes, ssize_t (*readPtr)(int fd, void *buffer, size_t nbytes)) {
+    size_t bytesRead = 0;
+    while (true)  {
+        errno = 0;
+        ssize_t nextBytesRead = readPtr(fd, buffer + bytesRead, nbytes - bytesRead);
+        if (errno == 0 && nextBytesRead == 0) {
+            return bytesRead;
+        } else if (errno == 0) {
+            bytesRead += nextBytesRead;
+        } else if (errno == EINTR) {
+            // Have it retry
+        } else {
+            return -1;
+        }
+    }
+}
+
+ssize_t JJLSafeRead(int fd, void *buffer, size_t nbytes) {
+    return JJLSafeReadInjection(fd, buffer, nbytes, read);
+}
+
+int JJLSafeOpenInjection(const char *path, int mode, int (*openPtr)(const char *path, int mode, ...)) {
+    while (true) {
+        errno = 0;
+        int result = openPtr(path, mode);
+        if (errno != EINTR) {
+            return result;
+        }
+    }
+}
+
+int JJLSafeOpen(const char *path, int mode) {
+    return JJLSafeOpenInjection(path, mode, open);
+}
+
 /* Load tz data from the file named NAME into *SP.  Read extended
    format if DOEXTEND.  Use *LSP for temporary storage.  Return 0 on
    success, an errno value on failure.  */
@@ -424,11 +459,11 @@ tzloadbody(char const *name, struct state *sp, bool doextend,
 	}
 	if (doaccess && access(name, R_OK) != 0)
 	  return errno;
-	fid = open(name, OPEN_MODE);
+	fid = JJLSafeOpen(name, OPEN_MODE);
 	if (fid < 0)
 	  return errno;
 
-	nread = read(fid, up->buf, sizeof up->buf);
+	nread = JJLSafeRead(fid, up->buf, sizeof up->buf);
 	if (nread < tzheadsize) {
 	  int err = nread < 0 ? errno : EINVAL;
 	  close(fid);
@@ -1338,7 +1373,7 @@ tzsetlcl(char const *name)
   lcl_is_set = lcl;
 }
 
-#ifdef STD_INSPIRED
+/*#ifdef STD_INSPIRED
 void
 tzsetwall(void)
 {
@@ -1347,7 +1382,7 @@ tzsetwall(void)
   tzsetlcl(NULL);
   unlock();
 }
-#endif
+#endif*/
 
 static void
 tzset_unlocked(void)
@@ -1355,14 +1390,14 @@ tzset_unlocked(void)
   tzsetlcl(getenv("TZ"));
 }
 
-void
+/*void
 tzset(void)
 {
   if (lock() != 0)
     return;
   tzset_unlocked();
   unlock();
-}
+}*/
 
 static void
 gmtcheck(void)
@@ -1384,7 +1419,7 @@ gmtcheck(void)
 #if NETBSD_INSPIRED
 
 timezone_t
-tzalloc(char const *name)
+jjl_tzalloc(char const *name)
 {
   timezone_t sp = malloc(sizeof *sp);
   if (sp) {
@@ -1399,7 +1434,7 @@ tzalloc(char const *name)
 }
 
 void
-tzfree(timezone_t sp)
+jjl_tzfree(timezone_t sp)
 {
   free(sp);
 }
@@ -1513,7 +1548,7 @@ localsub(struct state const *sp, time_t const *timep, int_fast32_t setname,
 #if NETBSD_INSPIRED
 
 struct tm *
-localtime_rz(struct state *sp, time_t const *timep, struct tm *tmp)
+jjl_localtime_rz(struct state *sp, time_t const *timep, struct tm *tmp)
 {
   return localsub(sp, timep, 0, tmp);
 }
@@ -1535,7 +1570,7 @@ localtime_tzset(time_t const *timep, struct tm *tmp, bool setname)
   return tmp;
 }
 
-struct tm *
+/*struct tm *
 localtime(const time_t *timep)
 {
   return localtime_tzset(timep, &tm, true);
@@ -1545,7 +1580,7 @@ struct tm *
 localtime_r(const time_t *timep, struct tm *tmp)
 {
   return localtime_tzset(timep, tmp, false);
-}
+}*/
 
 /*
 ** gmtsub is to gmtime as localsub is to localtime.
@@ -1574,7 +1609,7 @@ gmtsub(struct state const *sp, time_t const *timep, int_fast32_t offset,
 * Re-entrant version of gmtime.
 */
 
-struct tm *
+/*struct tm *
 gmtime_r(const time_t *timep, struct tm *tmp)
 {
   gmtcheck();
@@ -1585,16 +1620,16 @@ struct tm *
 gmtime(const time_t *timep)
 {
   return gmtime_r(timep, &tm);
-}
+}*/
 
 #ifdef STD_INSPIRED
 
-struct tm *
+/*struct tm *
 offtime(const time_t *timep, long offset)
 {
   gmtcheck();
   return gmtsub(gmtptr, timep, offset, &tm);
-}
+}*/
 
 #endif /* defined STD_INSPIRED */
 
@@ -1730,26 +1765,26 @@ timesub(const time_t *timep, int_fast32_t offset,
 	return NULL;
 }
 
-char *
+/*char *
 ctime(const time_t *timep)
-{
+{*/
 /*
 ** Section 4.12.3.2 of X3.159-1989 requires that
 **	The ctime function converts the calendar time pointed to by timer
 **	to local time in the form of a string. It is equivalent to
 **		asctime(localtime(timer))
 */
-  struct tm *tmp = localtime(timep);
+  /*struct tm *tmp = localtime(timep);
   return tmp ? asctime(tmp) : NULL;
-}
+}*/
 
-char *
+/*char *
 ctime_r(const time_t *timep, char *buf)
 {
   struct tm mytm;
   struct tm *tmp = localtime_r(timep, &mytm);
   return tmp ? asctime_r(tmp, buf) : NULL;
-}
+}*/
 
 /*
 ** Adapted from code provided by Robert Elz, who writes:
@@ -2154,14 +2189,14 @@ mktime_tzname(struct state *sp, struct tm *tmp, bool setname)
 #if NETBSD_INSPIRED
 
 time_t
-mktime_z(struct state *sp, struct tm *tmp)
+jjl_mktime_z(struct state *sp, struct tm *tmp)
 {
   return mktime_tzname(sp, tmp, false);
 }
 
 #endif
 
-time_t
+/*time_t
 mktime(struct tm *tmp)
 {
   time_t t;
@@ -2174,32 +2209,32 @@ mktime(struct tm *tmp)
   t = mktime_tzname(lclptr, tmp, true);
   unlock();
   return t;
-}
+}*/
 
 #ifdef STD_INSPIRED
 
-time_t
+/*time_t
 timelocal(struct tm *tmp)
 {
 	if (tmp != NULL)
-		tmp->tm_isdst = -1;	/* in case it wasn't initialized */
-	return mktime(tmp);
-}
+		tmp->tm_isdst = -1;*/	/* in case it wasn't initialized */
+	/*return mktime(tmp);
+}*/
 
-time_t
+/*time_t
 timegm(struct tm *tmp)
 {
   return timeoff(tmp, 0);
-}
+}*/
 
-time_t
+/*time_t
 timeoff(struct tm *tmp, long offset)
 {
   if (tmp)
     tmp->tm_isdst = 0;
   gmtcheck();
   return time1(tmp, gmtsub, gmtptr, offset);
-}
+}*/
 
 #endif /* defined STD_INSPIRED */
 

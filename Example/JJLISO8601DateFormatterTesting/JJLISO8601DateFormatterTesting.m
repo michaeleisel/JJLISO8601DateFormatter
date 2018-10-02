@@ -20,6 +20,8 @@
 - (void)setUp {
     [super setUp];
 
+    self.continueAfterFailure = NO;
+
     _appleFormatter = [[NSISO8601DateFormatter alloc] init];
     _testFormatter = [[JJLISO8601DateFormatter alloc] init];
     NSISO8601DateFormatOptions options = _appleFormatter.formatOptions | NSISO8601DateFormatWithFractionalSeconds;
@@ -93,6 +95,17 @@ __used static NSString *binaryTestRep(NSISO8601DateFormatOptions opts) {
     }
     return [strings componentsJoinedByString:@", "];
 }
+
+/*- (void)_swapFunction:(char *)functionName withFunction:(void *)newFunction forBlock:(dispatch_block_t)block
+{
+    void *oldFunctionLocation = NULL;
+    rebind_symbols((struct rebinding[1]){{functionName, newFunction, (void *)&oldFunctionLocation}}, 1);
+    if (block) {
+        block();
+    }
+    void *placeholder = NULL;
+    rebind_symbols((struct rebinding[1]){{functionName, oldFunctionLocation, (void *)&placeholder}}, 1);
+}*/
 
 - (void)testTimeZoneGettingAndSetting
 {

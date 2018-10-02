@@ -15,6 +15,8 @@
 		B366CD002149E13900838689 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B366CCFF2149E13900838689 /* Assets.xcassets */; };
 		B366CD032149E13900838689 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B366CD012149E13900838689 /* LaunchScreen.storyboard */; };
 		B366CD062149E13A00838689 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B366CD052149E13A00838689 /* main.m */; };
+		B38BF2022163B0FE005B82D4 /* JJLSafeOpenTesting.m in Sources */ = {isa = PBXBuildFile; fileRef = B38BF2012163B0FE005B82D4 /* JJLSafeOpenTesting.m */; };
+		B38BF2042163B12D005B82D4 /* JJLSafeReadTesting.m in Sources */ = {isa = PBXBuildFile; fileRef = B38BF2032163B12D005B82D4 /* JJLSafeReadTesting.m */; };
 		ED0C2AC9650D99782B4B0836 /* libPods-JJLISO8601DateFormatterApp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 912822501B1CC7D1E323F798 /* libPods-JJLISO8601DateFormatterApp.a */; };
 /* End PBXBuildFile section */
 
@@ -36,6 +38,8 @@
 		B366CD022149E13900838689 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		B366CD042149E13900838689 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B366CD052149E13A00838689 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		B38BF2012163B0FE005B82D4 /* JJLSafeOpenTesting.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JJLSafeOpenTesting.m; sourceTree = "<group>"; };
+		B38BF2032163B12D005B82D4 /* JJLSafeReadTesting.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JJLSafeReadTesting.m; sourceTree = "<group>"; };
 		D176F898D2738DB713292FBD /* Pods-JJLISO8601DateFormatterApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JJLISO8601DateFormatterApp.debug.xcconfig"; path = "Pods/Target Support Files/Pods-JJLISO8601DateFormatterApp/Pods-JJLISO8601DateFormatterApp.debug.xcconfig"; sourceTree = "<group>"; };
 		DF5F706C2D4519FACA0B88D9 /* libPods-JJLISO8601DateFormatterTesting.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-JJLISO8601DateFormatterTesting.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -93,6 +97,8 @@
 			isa = PBXGroup;
 			children = (
 				B330AE35214986B90016D917 /* JJLISO8601DateFormatterTesting.m */,
+				B38BF2012163B0FE005B82D4 /* JJLSafeOpenTesting.m */,
+				B38BF2032163B12D005B82D4 /* JJLSafeReadTesting.m */,
 				B330AE37214986B90016D917 /* Info.plist */,
 			);
 			path = JJLISO8601DateFormatterTesting;
@@ -264,7 +270,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B38BF2022163B0FE005B82D4 /* JJLSafeOpenTesting.m in Sources */,
 				B330AE36214986B90016D917 /* JJLISO8601DateFormatterTesting.m in Sources */,
+				B38BF2042163B12D005B82D4 /* JJLSafeReadTesting.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

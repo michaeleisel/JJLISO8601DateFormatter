@@ -1,13 +1,16 @@
 PODS:
+  - fishhook (0.2)
   - JJLISO8601DateFormatter (0.1.0)
   - OCMock (3.4.1)
 
 DEPENDENCIES:
+  - fishhook
   - JJLISO8601DateFormatter (from `../`)
   - OCMock
 
 SPEC REPOS:
   https://github.com/CocoaPods/Specs.git:
+    - fishhook
     - OCMock
 
 EXTERNAL SOURCES:
@@ -15,9 +18,10 @@ EXTERNAL SOURCES:
     :path: "../"
 
 SPEC CHECKSUMS:
+  fishhook: ea19933abfe8f2f52c55fd8b6e2718467d3ebc89
   JJLISO8601DateFormatter: 444f6abd3159e1cd5a6d22c5d96e4064b999fb61
   OCMock: 2cd0716969bab32a2283ff3a46fd26a8c8b4c5e3
 
-PODFILE CHECKSUM: 49d15b4ac5986c55911d40f6338d734d2e611393
+PODFILE CHECKSUM: fc6a026ae497bf6ad21b6c9574545e678d609e24
 
 COCOAPODS: 1.5.0

@@ -11,8 +11,7 @@
 #import "JJLInternal.h"
 #import "itoa.h"
 
-void
-JJLGmtSub(time_t const *timep, struct tm *tmp);
+// void JJLGmtSub(time_t const *timep, struct tm *tmp);
 // void gmtload(struct state *const sp);
 
 typedef struct {
@@ -179,7 +178,7 @@ void JJLFillBufferForDate(char *buffer, double timeInSeconds, int32_t firstWeekd
 
     double unused = 0;
     double fractionalComponent = modf(timeInSeconds, &unused);
-    // Technically, maybe this isn't perfect, maybe 0.9995 is represented with a double just under that, but this seems good enough
+    // Technically this might not be perfect, maybe 0.9995 is represented with a double just under that, but this seems good enough
     if (fractionalComponent >= 0.9995) {
         timeInSeconds = lround(timeInSeconds);
     }
@@ -187,7 +186,7 @@ void JJLFillBufferForDate(char *buffer, double timeInSeconds, int32_t firstWeekd
     if (local) {
         localtime_r(&integerTime, &components);
     } else {
-        JJLGmtSub(&integerTime, &components);
+        gmtime_r(&integerTime, &components);
     }
     // timeInSeconds -= components.tm_gmtoff;
     bool showYear = !!(options & kCFISO8601DateFormatWithYear);
