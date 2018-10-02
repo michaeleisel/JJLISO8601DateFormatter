@@ -4,6 +4,6 @@
 
 const uint32_t kJJLMaxLength = 40;
 
-void JJLFillBufferForDate(char *bufferOrig, double timeInSeconds, int32_t firstWeekday, bool local, CFISO8601DateFormatOptions options);
+void JJLFillBufferForDate(char *buffer, double timeInSeconds, int32_t firstWeekday, bool local, CFISO8601DateFormatOptions options, timezone_t timeZone, double fallbackOffset);
 
 typedef char JJLBuffer[kJJLMaxLength];

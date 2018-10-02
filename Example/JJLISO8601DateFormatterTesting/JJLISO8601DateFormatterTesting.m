@@ -45,8 +45,17 @@
     [super tearDown];
 }
 
+void *jjl_tzalloc(char const *name);
+
+- (void)testTZAlloc
+{
+    void *badTimezone = jjl_tzalloc("America/adf");
+    XCTAssert(badTimezone == NULL);
+    void *goodTimezone = jjl_tzalloc("Africa/Addis_Ababa");
+    XCTAssert(goodTimezone != NULL);
+}
+
 static void OS_ALWAYS_INLINE JJLTestStringFromDate(NSDate *date, NSISO8601DateFormatter *appleFormatter, JJLISO8601DateFormatter *testFormatter) {
-    // _appleFor
     NSString *appleString = [appleFormatter stringFromDate:date];
     NSString *testString = [testFormatter stringFromDate:date];
     if (appleString != testString && ![appleString isEqualToString:testString]) {
@@ -124,6 +133,52 @@ __used static NSString *binaryTestRep(NSISO8601DateFormatOptions opts) {
     [[NSNotificationCenter defaultCenter] postNotificationName:NSCurrentLocaleDidChangeNotification object:locale/*correct?*/];
 }
 
+- (void)testConcurrentUsage
+{
+    NSTimeZone *gmtOffsetTimeZone = [NSTimeZone timeZoneForSecondsFromGMT:3600];
+    NSArray <NSTimeZone *> *timeZones = @[[NSTimeZone systemTimeZone], _brazilTimeZone, /*gmtOffsetTimeZone, */_pacificTimeZone];
+    _testFormatter.timeZone = timeZones.firstObject;
+    NSMutableArray *testStrings = [NSMutableArray array];
+    NSMutableArray <NSString *> *correctStrings = [NSMutableArray array];
+    NSInteger repeatCount = 100;
+    for (NSTimeZone *timeZone in timeZones) {
+        _appleFormatter.timeZone = timeZone;
+        NSString *string = [_appleFormatter stringFromDate:_testDate];
+        [correctStrings addObject:string];
+    }
+    NSMutableArray *repeatedCorrectStrings = [NSMutableArray array];
+    for (NSInteger i = 0; i < repeatCount; i++) {
+        [repeatedCorrectStrings addObjectsFromArray:correctStrings];
+    }
+    correctStrings = [repeatedCorrectStrings copy];
+    dispatch_group_t group = dispatch_group_create();
+    dispatch_group_enter(group);
+    __block BOOL done = NO;
+    __block int count = 0;
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+    dispatch_async(queue, ^{
+        while (!done) {
+            NSString *string = [self->_testFormatter stringFromDate:self->_testDate];
+            count++;
+            if (testStrings.count == 0 || ![string isEqualToString:testStrings.lastObject]) {
+                [testStrings addObject:string];
+            }
+        }
+    });
+    dispatch_async(queue, ^{
+        for (NSInteger i = 0; i < repeatCount; i++) {
+            for (NSTimeZone *timeZone in timeZones) {
+                self->_testFormatter.timeZone = timeZone;
+                usleep(5e3);
+            }
+        }
+        dispatch_group_leave(group);
+        done = YES;
+    });
+    dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
+    XCTAssert([correctStrings isEqualToArray:testStrings]);
+}
+
 - (void)testNilDate
 {
     JJLTestStringFromDate(nil, _appleFormatter, _testFormatter);
@@ -178,7 +233,16 @@ static inline bool JJLChangeHasOccurred(int64_t i, int64_t increment, int64_t en
 
 - (void)testStringFromDateTimeZone
 {
-    for (NSTimeZone *timeZone in @[_brazilTimeZone, _pacificTimeZone]) {
+    NSMutableArray <NSTimeZone *> *timeZones = [NSMutableArray array];
+    [timeZones addObject:[NSTimeZone timeZoneForSecondsFromGMT:496]];
+    for (NSString *name in [NSTimeZone knownTimeZoneNames]) {
+        NSTimeZone *timeZone = [NSTimeZone timeZoneWithName:name];
+        [timeZones addObject:timeZone];
+    }
+    [timeZones addObject:[NSTimeZone systemTimeZone]];
+    [timeZones addObject:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+
+    for (NSTimeZone *timeZone in timeZones) {
         _testFormatter.timeZone = _appleFormatter.timeZone = timeZone;
         JJLTestStringFromDate(_testDate, _appleFormatter, _testFormatter);
     }

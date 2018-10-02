@@ -7,6 +7,7 @@
 #import <pthread.h>
 #import <math.h>
 #import <stdio.h>
+#import "tzfile.h"
 
 #import "JJLInternal.h"
 #import "itoa.h"
@@ -166,7 +167,7 @@ bool JJLGetShowFractionalSeconds(CFISO8601DateFormatOptions options) {
     }
 }
 
-void JJLFillBufferForDate(char *buffer, double timeInSeconds, int32_t firstWeekday, bool local, CFISO8601DateFormatOptions options) {
+void JJLFillBufferForDate(char *buffer, double timeInSeconds, int32_t firstWeekday, bool local, CFISO8601DateFormatOptions options, timezone_t timeZone, double fallbackOffset) {
     if ((options & (options - 1)) == 0) {
         return;
     }
@@ -183,11 +184,14 @@ void JJLFillBufferForDate(char *buffer, double timeInSeconds, int32_t firstWeekd
         timeInSeconds = lround(timeInSeconds);
     }
     time_t integerTime = (time_t)timeInSeconds;
+    integerTime += fallbackOffset;
     if (local) {
         localtime_r(&integerTime, &components);
     } else {
-        gmtime_r(&integerTime, &components);
+        jjl_localtime_rz(timeZone, &integerTime, &components);
+        //gmtime_r(&integerTime, &components);
     }
+    components.tm_gmtoff += fallbackOffset;
     // timeInSeconds -= components.tm_gmtoff;
     bool showYear = !!(options & kCFISO8601DateFormatWithYear);
     bool showDateSeparator = !!(options & kCFISO8601DateFormatWithDashSeparatorInDate);
@@ -265,6 +269,24 @@ void JJLFillBufferForDate(char *buffer, double timeInSeconds, int32_t firstWeekd
         }
     }
     if (options & kCFISO8601DateFormatWithTimeZone) {
-        JJLPush(&string, 'Z');
+        long offset = components.tm_gmtoff;
+        if (offset == 0) {
+            JJLPush(&string, 'Z');
+        } else {
+            char sign = '\0';
+            if (offset < 0) {
+                offset *= -1;
+                sign = '-';
+            } else {
+                sign = '+';
+            }
+            int32_t minutes = offset / 60;
+            int32_t hours = minutes / 60;
+            int32_t remainderMinutes = minutes % 60;
+            JJLPush(&string, sign);
+            JJLFillBufferWithUpTo69(hours, &string);
+            JJLPush(&string, ':');
+            JJLFillBufferWithUpTo69(remainderMinutes, &string);
+        }
     }
 }

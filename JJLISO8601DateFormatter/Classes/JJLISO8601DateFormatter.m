@@ -2,16 +2,24 @@
 
 #import "JJLISO8601DateFormatter.h"
 #import "itoa.h"
+#import "tzfile.h"
 #import "JJLInternal.h"
+#import <pthread.h>
+
 
 #define JJL_ALWAYS_INLINE __attribute__((always_inline))
 
 // Note: this class does not use ARC
 
-@implementation JJLISO8601DateFormatter
+@implementation JJLISO8601DateFormatter {
+    timezone_t _cTimeZone;
+    pthread_rwlock_t _timeZoneVarsLock;
+}
 
 static NSTimeZone *sGMTTimeZone = nil;
 static NSInteger sFirstWeekday = 0;
+static NSMutableDictionary <NSString *, NSValue *> *sNameToTimeZoneValue;
+static pthread_rwlock_t sDictionaryLock = PTHREAD_RWLOCK_INITIALIZER;
 
 @synthesize formatOptions = _formatOptions;
 @synthesize timeZone = _timeZone;
@@ -31,6 +39,7 @@ static void *kJJLCurrentLocaleContext = &kJJLCurrentLocaleContext;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sGMTTimeZone = [[NSTimeZone timeZoneWithName:@"GMT"] retain];
+        sNameToTimeZoneValue = [[NSMutableDictionary dictionary] retain];
         [[NSNotificationCenter defaultCenter] addObserver:[self class] selector:@selector(_localeDidChange) name:NSCurrentLocaleDidChangeNotification object:nil];
         [[self class] _localeDidChange];
     });
@@ -54,8 +63,10 @@ static void *kJJLCurrentLocaleContext = &kJJLCurrentLocaleContext;
     self = [super init];
     if (self) {
         [self _performInitialSetupIfNecessary];
+
+        _timeZoneVarsLock = (pthread_rwlock_t)PTHREAD_RWLOCK_INITIALIZER;
         _formatOptions = NSISO8601DateFormatWithInternetDateTime | NSISO8601DateFormatWithDashSeparatorInDate | NSISO8601DateFormatWithColonSeparatorInTime | NSISO8601DateFormatWithColonSeparatorInTimeZone;
-        _timeZone = sGMTTimeZone;
+        self.timeZone = sGMTTimeZone;
     }
     return self;
 }
@@ -82,14 +93,57 @@ static void *kJJLCurrentLocaleContext = &kJJLCurrentLocaleContext;
     return timeZone;
 }
 
+// Note that the returned timezone_t could be null if it failed for some reason
+static timezone_t JJLCTimeZoneForTimeZone(NSTimeZone *timeZone)
+{
+    timezone_t cTimeZone = NULL;
+
+    NS_VALID_UNTIL_END_OF_SCOPE NSString *name = timeZone.name;
+    const char *cName = [name UTF8String];
+    NSValue *timeZoneValue = nil;
+
+    pthread_rwlock_rdlock(&sDictionaryLock);
+    ({
+        timeZoneValue = sNameToTimeZoneValue[name];
+    });
+    pthread_rwlock_unlock(&sDictionaryLock);
+
+    if (!timeZoneValue) {
+        cTimeZone = jjl_tzalloc(cName);
+        timeZoneValue = [NSValue valueWithPointer:cTimeZone];
+        pthread_rwlock_wrlock(&sDictionaryLock);
+        ({
+            sNameToTimeZoneValue[name] = timeZoneValue;
+        });
+        pthread_rwlock_unlock(&sDictionaryLock);
+    } else {
+        cTimeZone = [timeZoneValue pointerValue];
+    }
+
+    return cTimeZone;
+}
+
+- (void)dealloc
+{
+    [super dealloc];
+
+    [_timeZone autorelease];
+    pthread_rwlock_destroy(&_timeZoneVarsLock);
+}
+
 - (void)setTimeZone:(NSTimeZone *)timeZone
 {
-    @synchronized(self) {
-        NSTimeZone *oldTimeZone = timeZone;
+    NSTimeZone *oldTimeZone = _timeZone;
+
+    pthread_rwlock_wrlock(&_timeZoneVarsLock);
+    ({
         _timeZone = timeZone ?: sGMTTimeZone;
-        [_timeZone retain];
-        [oldTimeZone autorelease];
-    }
+        _cTimeZone = JJLCTimeZoneForTimeZone(_timeZone);
+    });
+    pthread_rwlock_unlock(&_timeZoneVarsLock);
+
+    [_timeZone retain];
+    [oldTimeZone autorelease];
 }
 
 BOOL JJLIsValidFormatOptions(NSISO8601DateFormatOptions formatOptions) {
@@ -102,7 +156,15 @@ BOOL JJLIsValidFormatOptions(NSISO8601DateFormatOptions formatOptions) {
 
 - (NSString *)stringFromDate:(NSDate *)date
 {
-    return JJLStringFromDate(date, nil, _formatOptions);
+    NSString *string = nil;
+
+    pthread_rwlock_rdlock(&_timeZoneVarsLock);
+    ({
+        string = JJLStringFromDate(date, _formatOptions, _cTimeZone, _timeZone);
+    });
+    pthread_rwlock_unlock(&_timeZoneVarsLock);
+
+    return string;
 }
 
 - (nullable NSDate *)dateFromString:(NSString *)string
@@ -112,27 +174,28 @@ BOOL JJLIsValidFormatOptions(NSISO8601DateFormatOptions formatOptions) {
 
 + (NSString *)stringFromDate:(NSDate *)date timeZone:(NSTimeZone *)timeZone formatOptions:(NSISO8601DateFormatOptions)formatOptions
 {
-    return @"";
+    timezone_t cTimeZone = JJLCTimeZoneForTimeZone(timeZone);
+    NSString *string = nil;// JJLStringFromDate(date, _formatOptions, _cTimeZone, _timeZone);
+    return string;
 }
 
-static inline NSString *JJLStringFromDate(NSDate *date, NSTimeZone *timeZone, NSISO8601DateFormatOptions formatOptions)
+static inline NSString *JJLStringFromDate(NSDate *date, NSISO8601DateFormatOptions formatOptions, timezone_t cTimeZone, NSTimeZone *timeZone)
 {
     if (!date) {
         return nil;
     }
-    /*if (!timeZone) {
-        timeZone = [NSTimeZone defaultTimeZone];
-    }*/
-    int zz = [[NSTimeZone defaultTimeZone] secondsFromGMTForDate:date];
+    NSString *string = nil;
     double time = date.timeIntervalSince1970;// - [timeZone secondsFromGMTForDate:date];
+    double offset = cTimeZone ? 0 : -[timeZone secondsFromGMTForDate:date];
     char buffer[kJJLMaxLength] = {0};
     char *bufferPtr = (char *)buffer;
     int32_t firstWeekday = (int32_t)sFirstWeekday; // Use a copy of sFirstWeekday in case it changes
-    JJLFillBufferForDate(bufferPtr, time, firstWeekday, NO, (CFISO8601DateFormatOptions)formatOptions);
+    JJLFillBufferForDate(bufferPtr, time, firstWeekday, NO, (CFISO8601DateFormatOptions)formatOptions, cTimeZone, offset);
     /*time_t time = date.timeIntervalSince1970;// - [timeZone secondsFromGMTForDate:date];
     char buffer[kJJLMaxLength] = {0};
     JJLFillBufferForDate(buffer, time, NO, (CFISO8601DateFormatOptions)formatOptions);*/
-    return CFAutorelease(CFStringCreateWithCString(kCFAllocatorDefault, buffer, kCFStringEncodingUTF8));
+    string = CFAutorelease(CFStringCreateWithCString(kCFAllocatorDefault, buffer, kCFStringEncodingUTF8));
+    return string;
 }
 
 @end

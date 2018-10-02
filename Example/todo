@@ -1,2 +1,3 @@
-test plan: asan, guard malloc, etc.
+test plan: tsan, asan, guard malloc, etc.
 figure out if we want to keep that header, "Copyright..." on each file
+get -dealloc working right, check for leaks
