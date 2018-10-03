@@ -1,3 +1,4 @@
 test plan: tsan, asan, guard malloc, etc.
 figure out if we want to keep that header, "Copyright..." on each file
+check that the file header is always tzif2?
 get -dealloc working right, check for leaks

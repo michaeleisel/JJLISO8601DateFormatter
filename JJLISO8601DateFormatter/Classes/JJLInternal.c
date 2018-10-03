@@ -15,17 +15,25 @@
 // void JJLGmtSub(time_t const *timep, struct tm *tmp);
 // void gmtload(struct state *const sp);
 
+const uint32_t kJJLMaxLength = 40;
+
 typedef struct {
     char *buffer;
     int32_t length;
 } JJLString;
 
 static inline void JJLPush(JJLString *string, char c) {
+    if (string->length + 1 >= JJL_MAX_DATE_LENGTH) {
+        return;
+    }
     string->buffer[string->length] = c;
     string->length++;
 }
 
 static inline void JJLPushBuffer(JJLString *string, char *buffer, int32_t size) {
+    if (string->length + size >= JJL_MAX_DATE_LENGTH) {
+        return;
+    }
     memcpy(&(string->buffer[string->length]), buffer, size);
     string->length += size;
 }
@@ -185,12 +193,8 @@ void JJLFillBufferForDate(char *buffer, double timeInSeconds, int32_t firstWeekd
     }
     time_t integerTime = (time_t)timeInSeconds;
     integerTime += fallbackOffset;
-    if (local) {
-        localtime_r(&integerTime, &components);
-    } else {
-        jjl_localtime_rz(timeZone, &integerTime, &components);
-        //gmtime_r(&integerTime, &components);
-    }
+    jjl_localtime_rz(timeZone, &integerTime, &components);
+    //gmtime_r(&integerTime, &components);
     components.tm_gmtoff += fallbackOffset;
     // timeInSeconds -= components.tm_gmtoff;
     bool showYear = !!(options & kCFISO8601DateFormatWithYear);

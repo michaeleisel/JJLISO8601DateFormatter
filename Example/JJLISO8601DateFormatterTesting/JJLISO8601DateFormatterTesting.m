@@ -153,7 +153,7 @@ __used static NSString *binaryTestRep(NSISO8601DateFormatOptions opts) {
     correctStrings = [repeatedCorrectStrings copy];
     dispatch_group_t group = dispatch_group_create();
     dispatch_group_enter(group);
-    __block BOOL done = NO;
+    __block _Atomic(BOOL) done = NO;
     __block int count = 0;
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
     dispatch_async(queue, ^{
@@ -175,6 +175,7 @@ __used static NSString *binaryTestRep(NSISO8601DateFormatOptions opts) {
         dispatch_group_leave(group);
         done = YES;
     });
+    // todo: Throw some extra reads in for fun
     dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
     XCTAssert([correctStrings isEqualToArray:testStrings]);
 }
@@ -235,6 +236,7 @@ static inline bool JJLChangeHasOccurred(int64_t i, int64_t increment, int64_t en
 {
     NSMutableArray <NSTimeZone *> *timeZones = [NSMutableArray array];
     [timeZones addObject:[NSTimeZone timeZoneForSecondsFromGMT:496]];
+    [timeZones addObject:[NSTimeZone timeZoneForSecondsFromGMT:-2 * 3600 - 496]];
     for (NSString *name in [NSTimeZone knownTimeZoneNames]) {
         NSTimeZone *timeZone = [NSTimeZone timeZoneWithName:name];
         [timeZones addObject:timeZone];

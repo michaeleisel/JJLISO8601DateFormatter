@@ -109,7 +109,20 @@ static timezone_t JJLCTimeZoneForTimeZone(NSTimeZone *timeZone)
     pthread_rwlock_unlock(&sDictionaryLock);
 
     if (!timeZoneValue) {
-        cTimeZone = jjl_tzalloc(cName);
+        NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^GMT(\\+|-)(\\d{2})(\\d{2})$" options:0 error:NULL];
+        NSArray <NSTextCheckingResult *> *matches = [regex matchesInString:name options:0 range:NSMakeRange(0, name.length)];
+        NSTextCheckingResult *match = matches.firstObject;
+        if (match) {
+            char origSign = [name characterAtIndex:[match rangeAtIndex:1].location];
+            char sign = origSign == '-' ? '+' : '-';
+            NSString *hours = [name substringWithRange:[match rangeAtIndex:2]];
+            NSString *minutes = [name substringWithRange:[match rangeAtIndex:3]];
+            NS_VALID_UNTIL_END_OF_SCOPE NSString *string = [NSString stringWithFormat:@"GMT%c%@:%@", sign, hours, minutes];
+            const char *adjustedCName = [string UTF8String];
+            cTimeZone = jjl_tzalloc(adjustedCName);
+        } else {
+            cTimeZone = jjl_tzalloc(cName);
+        }
         timeZoneValue = [NSValue valueWithPointer:cTimeZone];
         pthread_rwlock_wrlock(&sDictionaryLock);
         ({
@@ -187,10 +200,10 @@ static inline NSString *JJLStringFromDate(NSDate *date, NSISO8601DateFormatOptio
     NSString *string = nil;
     double time = date.timeIntervalSince1970;// - [timeZone secondsFromGMTForDate:date];
     double offset = cTimeZone ? 0 : -[timeZone secondsFromGMTForDate:date];
-    char buffer[kJJLMaxLength] = {0};
+    char buffer[JJL_MAX_DATE_LENGTH] = {0};
     char *bufferPtr = (char *)buffer;
     int32_t firstWeekday = (int32_t)sFirstWeekday; // Use a copy of sFirstWeekday in case it changes
-    JJLFillBufferForDate(bufferPtr, time, firstWeekday, NO, (CFISO8601DateFormatOptions)formatOptions, cTimeZone, offset);
+    JJLFillBufferForDate(bufferPtr, time, firstWeekday, NO, (CFISO8601DateFormatOptions)formatOptions, cTimeZone, 0);
     /*time_t time = date.timeIntervalSince1970;// - [timeZone secondsFromGMTForDate:date];
     char buffer[kJJLMaxLength] = {0};
     JJLFillBufferForDate(buffer, time, NO, (CFISO8601DateFormatOptions)formatOptions);*/
