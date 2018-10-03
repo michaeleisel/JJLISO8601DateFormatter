@@ -64,13 +64,10 @@ static pthread_rwlock_t sDictionaryLock = PTHREAD_RWLOCK_INITIALIZER;
     _formatOptions = formatOptions;
 }
 
+// This getter exists because timeZone is designated as an atomic
 - (NSTimeZone *)timeZone
 {
-    NSTimeZone *timeZone = nil;
-    @synchronized(self) {
-        timeZone = _timeZone;
-    }
-    return timeZone;
+    return _timeZone;
 }
 
 // If the date is of the form "GMT+xxxx", invert the sign and add a colon, because that seems to be how tzdb interprets it correctly
@@ -188,9 +185,6 @@ static inline NSString *JJLStringFromDate(NSDate *date, NSISO8601DateFormatOptio
     NSString *string = nil;
     double time = date.timeIntervalSince1970;
     double offset = cTimeZone ? 0 : [timeZone secondsFromGMTForDate:date];
-    if (offset != 0) {
-        ;
-    }
     char buffer[JJL_MAX_DATE_LENGTH] = {0};
     char *bufferPtr = (char *)buffer;
     JJLFillBufferForDate(bufferPtr, time, NO, (CFISO8601DateFormatOptions)formatOptions, cTimeZone, offset);

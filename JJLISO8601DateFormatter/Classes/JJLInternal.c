@@ -82,7 +82,6 @@ static bool JJLGetShowFractionalSeconds(CFISO8601DateFormatOptions options)
 }
 
 void JJLFillBufferForDate(char *buffer, double timeInSeconds, bool local, CFISO8601DateFormatOptions options, timezone_t timeZone, double fallbackOffset) {
-    char *origBuffer = buffer;
     if ((options & (options - 1)) == 0) {
         return;
     }
