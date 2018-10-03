@@ -12,7 +12,6 @@
 #import <dispatch/dispatch.h>
 
 #import "JJLInternal.h"
-#import "itoa.h"
 
 // void JJLGmtSub(time_t const *timep, struct tm *tmp);
 // void gmtload(struct state *const sp);
@@ -23,11 +22,6 @@ static const int32_t kJJLItoaStringsLength = 3000;
 static const int32_t kJJLItoaEachStringLength = 4;
 
 static char sItoaStrings[kJJLItoaStringsLength][kJJLItoaEachStringLength];
-
-typedef struct {
-    char *buffer;
-    int32_t length;
-} JJLString;
 
 #define unlikely(x) __builtin_expect(!!(x), 0)
 
@@ -50,31 +44,23 @@ void JJLPerformInitialSetup() {
     }
 }
 
-static inline void JJLPush(JJLString *string, char c) {
-    if (unlikely(string->length + 1 >= JJL_MAX_DATE_LENGTH)) {
-        return;
-    }
-    string->buffer[string->length] = c;
-    string->length++;
+static inline void JJLPushBuffer(char **string, char *newBuffer, int32_t size) {
+    memcpy(*string, newBuffer, size);
+    *string += size;
 }
 
-static inline void JJLPushBuffer(JJLString *string, char *buffer, int32_t size) {
-    memcpy(&(string->buffer[string->length]), buffer, size);
-    string->length += size;
-}
-
-static inline void JJLPushNumber(JJLString *string, int32_t num, int32_t fixedDigitLength) {
+static inline void JJLPushNumber(char **string, int32_t num, int32_t fixedDigitLength) {
     if (0 <= num && num < kJJLItoaStringsLength) {
         JJLPushBuffer(string, &(sItoaStrings[num][kJJLItoaEachStringLength - fixedDigitLength]), fixedDigitLength);
     } else {
         // Slow path, but will practically never be needed
-        char str[5];
-        snprintf(str, sizeof(str), "%d", num);
+        char str[5]; // Don't allow more than this, in order to prevent overflow
+        snprintf(str, sizeof(str), "%04d", num);
         JJLPushBuffer(string, str, (int32_t)strlen(str));
     }
 }
 
-static inline void JJLFillBufferWithFractionalSeconds(double time, JJLString *string) {
+static inline void JJLFillBufferWithFractionalSeconds(double time, char **string) {
     double unused = 0;
     double fractionalComponent = modf(time, &unused);
     int32_t millis = (int32_t)lround(fractionalComponent * 1000);
@@ -96,11 +82,10 @@ static bool JJLGetShowFractionalSeconds(CFISO8601DateFormatOptions options)
 }
 
 void JJLFillBufferForDate(char *buffer, double timeInSeconds, bool local, CFISO8601DateFormatOptions options, timezone_t timeZone, double fallbackOffset) {
+    char *origBuffer = buffer;
     if ((options & (options - 1)) == 0) {
         return;
     }
-    JJLString string = {0};
-    string.buffer = buffer;
     struct tm components = {0};
 
     bool showFractionalSeconds = JJLGetShowFractionalSeconds(options);
@@ -134,19 +119,19 @@ void JJLFillBufferForDate(char *buffer, double timeInSeconds, bool local, CFISO8
         } else if (useNextYear) {
             yearToShow++;
         }
-        JJLPushNumber(&string, yearToShow, 4);
+        JJLPushNumber(&buffer, yearToShow, 4);
     }
     if (showMonth) {
         if (showDateSeparator && showYear) {
-            JJLPush(&string, '-');
+            *buffer++ = '-';
         }
-        JJLPushNumber(&string, components.tm_mon + 1, 2);
+        JJLPushNumber(&buffer, components.tm_mon + 1, 2);
     }
     if (showWeekOfYear) {
         if (showDateSeparator && (showYear || showMonth)) {
-            JJLPush(&string, '-');
+            *buffer++ = '-';
         }
-        JJLPush(&string, 'W');
+        *buffer++ = 'W';
         int32_t week = 0;
         if (useNextYear) {
             week = 0;
@@ -161,18 +146,18 @@ void JJLFillBufferForDate(char *buffer, double timeInSeconds, bool local, CFISO8
                 week++;
             }
         }
-        JJLPushNumber(&string, week + 1, 2);
+        JJLPushNumber(&buffer, week + 1, 2);
     }
     if (showDay) {
         if (showDateSeparator && (showYear || showMonth || showWeekOfYear)) {
-            JJLPush(&string, '-');
+            *buffer++ = '-';
         }
         if (showWeekOfYear) {
-            JJLPushNumber(&string, daysAfterFirstWeekday + 1, 2);
+            JJLPushNumber(&buffer, daysAfterFirstWeekday + 1, 2);
         } else if (showMonth) {
-            JJLPushNumber(&string, components.tm_mday, 2);
+            JJLPushNumber(&buffer, components.tm_mday, 2);
         } else {
-            JJLPushNumber(&string, components.tm_yday + 1, 3);
+            JJLPushNumber(&buffer, components.tm_yday + 1, 3);
         }
     }
 
@@ -181,27 +166,26 @@ void JJLFillBufferForDate(char *buffer, double timeInSeconds, bool local, CFISO8
     bool timeSeparatorIsSpace = !!(options & kCFISO8601DateFormatWithSpaceBetweenDateAndTime);
     if (showTime) {
         if (showDate) {
-            char separator = timeSeparatorIsSpace ? ' ' : 'T';
-            JJLPush(&string, separator);
+            *buffer++ = timeSeparatorIsSpace ? ' ' : 'T';
         }
-        JJLPushNumber(&string, components.tm_hour, 2);
+        JJLPushNumber(&buffer, components.tm_hour, 2);
         if (showTimeSeparator) {
-            JJLPush(&string, ':');
+            *buffer++ = ':';
         }
-        JJLPushNumber(&string, components.tm_min, 2);
+        JJLPushNumber(&buffer, components.tm_min, 2);
         if (showTimeSeparator) {
-            JJLPush(&string, ':');
+            *buffer++ = ':';
         }
-        JJLPushNumber(&string, components.tm_sec, 2);
+        JJLPushNumber(&buffer, components.tm_sec, 2);
         if (showFractionalSeconds) {
-            JJLPush(&string, '.');
-            JJLFillBufferWithFractionalSeconds(timeInSeconds, &string);
+            *buffer++ = '.';
+            JJLFillBufferWithFractionalSeconds(timeInSeconds, &buffer);
         }
     }
     if (options & kCFISO8601DateFormatWithTimeZone) {
         int32_t offset = (int32_t)components.tm_gmtoff;
         if (offset == 0) {
-            JJLPush(&string, 'Z');
+            *buffer++ = 'Z';
         } else {
             char sign = '\0';
             if (offset < 0) {
@@ -213,13 +197,13 @@ void JJLFillBufferForDate(char *buffer, double timeInSeconds, bool local, CFISO8
             int32_t hours = offset / (60 * 60);
             int32_t minutes = offset % (60 * 60) / 60;
             int32_t seconds = offset % 60;
-            JJLPush(&string, sign);
-            JJLPushNumber(&string, hours, 2);
-            JJLPush(&string, ':');
-            JJLPushNumber(&string, minutes, 2);
+            *buffer++ = sign;
+            JJLPushNumber(&buffer, hours, 2);
+            *buffer++ = ':';
+            JJLPushNumber(&buffer, minutes, 2);
             if (seconds > 0) {
-                JJLPush(&string, ':');
-                JJLPushNumber(&string, seconds, 2);
+                *buffer++ = ':';
+                JJLPushNumber(&buffer, seconds, 2);
             }
         }
     }

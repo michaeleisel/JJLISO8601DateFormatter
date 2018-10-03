@@ -59,6 +59,9 @@ typedef struct {
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    char *origBuffer, *buffer;
+    origBuffer = buffer = calloc(1, 5);
+    *buffer++ = 'F';
 
     /*({
         for (NSInteger j = 0; j < 4; j++) {
