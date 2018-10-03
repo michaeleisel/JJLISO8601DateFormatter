@@ -17,7 +17,7 @@
 }
 
 static NSTimeZone *sGMTTimeZone = nil;
-static NSInteger sFirstWeekday = 0;
+static _Atomic(NSInteger) sFirstWeekday = 0;
 static NSMutableDictionary <NSString *, NSValue *> *sNameToTimeZoneValue;
 static pthread_rwlock_t sDictionaryLock = PTHREAD_RWLOCK_INITIALIZER;
 
