@@ -93,13 +93,28 @@ static void *kJJLCurrentLocaleContext = &kJJLCurrentLocaleContext;
     return timeZone;
 }
 
+// If the date is of the form "GMT+xxxx", invert the sign and add a colon, because that seems to be how tzdb interprets it correctly
+// todo: add support for other time zones with a "+"?
+static NSString *JJLAdjustedTimeZoneName(NSString *name) {
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^GMT(\\+|-)(\\d{2})(\\d{2})$" options:0 error:NULL];
+    NSArray <NSTextCheckingResult *> *matches = [regex matchesInString:name options:0 range:NSMakeRange(0, name.length)];
+    NSTextCheckingResult *match = matches.firstObject;
+    if (!match) {
+        return name;
+    }
+    char origSign = [name characterAtIndex:[match rangeAtIndex:1].location];
+    char sign = origSign == '-' ? '+' : '-';
+    NSString *hours = [name substringWithRange:[match rangeAtIndex:2]];
+    NSString *minutes = [name substringWithRange:[match rangeAtIndex:3]];
+    return [NSString stringWithFormat:@"GMT%c%@:%@", sign, hours, minutes];
+}
+
 // Note that the returned timezone_t could be null if it failed for some reason
 static timezone_t JJLCTimeZoneForTimeZone(NSTimeZone *timeZone)
 {
     timezone_t cTimeZone = NULL;
 
-    NS_VALID_UNTIL_END_OF_SCOPE NSString *name = timeZone.name;
-    const char *cName = [name UTF8String];
+    NS_VALID_UNTIL_END_OF_SCOPE NSString *name = JJLAdjustedTimeZoneName(timeZone.name);
     NSValue *timeZoneValue = nil;
 
     pthread_rwlock_rdlock(&sDictionaryLock);
@@ -109,20 +124,7 @@ static timezone_t JJLCTimeZoneForTimeZone(NSTimeZone *timeZone)
     pthread_rwlock_unlock(&sDictionaryLock);
 
     if (!timeZoneValue) {
-        NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^GMT(\\+|-)(\\d{2})(\\d{2})$" options:0 error:NULL];
-        NSArray <NSTextCheckingResult *> *matches = [regex matchesInString:name options:0 range:NSMakeRange(0, name.length)];
-        NSTextCheckingResult *match = matches.firstObject;
-        if (match) {
-            char origSign = [name characterAtIndex:[match rangeAtIndex:1].location];
-            char sign = origSign == '-' ? '+' : '-';
-            NSString *hours = [name substringWithRange:[match rangeAtIndex:2]];
-            NSString *minutes = [name substringWithRange:[match rangeAtIndex:3]];
-            NS_VALID_UNTIL_END_OF_SCOPE NSString *string = [NSString stringWithFormat:@"GMT%c%@:%@", sign, hours, minutes];
-            const char *adjustedCName = [string UTF8String];
-            cTimeZone = jjl_tzalloc(adjustedCName);
-        } else {
-            cTimeZone = jjl_tzalloc(cName);
-        }
+        cTimeZone = jjl_tzalloc([name UTF8String]);
         timeZoneValue = [NSValue valueWithPointer:cTimeZone];
         pthread_rwlock_wrlock(&sDictionaryLock);
         ({
