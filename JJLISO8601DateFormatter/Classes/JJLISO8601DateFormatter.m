@@ -11,6 +11,12 @@
 
 // Note: this class does not use ARC
 
+@interface JJLISO8601DateFormatter ()
+
+@property (nonatomic) BOOL alwaysUseNSTimeZone;
+
+@end
+
 @implementation JJLISO8601DateFormatter {
     timezone_t _cTimeZone;
     pthread_rwlock_t _timeZoneVarsLock;
@@ -45,19 +51,6 @@ static void *kJJLCurrentLocaleContext = &kJJLCurrentLocaleContext;
     });
 }
 
-// make full test plan: test all supported OSes, test performance, and test unit tests
-// -Werror?
-// todo: does the C assert function turn off in release?
-// allow for "+" unary operator
-// asserts for invalid minute, year, etc.?
-// todo: sizeof long?
-// todo: max length correct? large numbers?
-// all calls to -timeZone must go through property, not ivar, to be atomic
-// use ios 9 and not 10 as minimum?
-// distant future? distant past?
-// todo: NSFormatter subclassing and secure coding!
-// todo: do MRC properties automatically retain and release?
-// clang format?
 -(id)init
 {
     self = [super init];
@@ -110,8 +103,12 @@ static NSString *JJLAdjustedTimeZoneName(NSString *name) {
 }
 
 // Note that the returned timezone_t could be null if it failed for some reason
-static timezone_t JJLCTimeZoneForTimeZone(NSTimeZone *timeZone)
+static timezone_t JJLCTimeZoneForTimeZone(NSTimeZone *timeZone, BOOL alwaysUseNSTimeZone)
 {
+    if (alwaysUseNSTimeZone) {
+        return NULL;
+    }
+
     timezone_t cTimeZone = NULL;
 
     NS_VALID_UNTIL_END_OF_SCOPE NSString *name = JJLAdjustedTimeZoneName(timeZone.name);
@@ -126,6 +123,9 @@ static timezone_t JJLCTimeZoneForTimeZone(NSTimeZone *timeZone)
     if (!timeZoneValue) {
         cTimeZone = jjl_tzalloc([name UTF8String]);
         timeZoneValue = [NSValue valueWithPointer:cTimeZone];
+        if (cTimeZone == NULL) {
+            NSLog(@"[JJLISO8601DateFormatter] Warning: time zone not found for name %@, falling back to NSTimeZone. Performance will be degraded", name);
+        }
         pthread_rwlock_wrlock(&sDictionaryLock);
         ({
             sNameToTimeZoneValue[name] = timeZoneValue;
@@ -153,7 +153,7 @@ static timezone_t JJLCTimeZoneForTimeZone(NSTimeZone *timeZone)
     pthread_rwlock_wrlock(&_timeZoneVarsLock);
     ({
         _timeZone = timeZone ?: sGMTTimeZone;
-        _cTimeZone = JJLCTimeZoneForTimeZone(_timeZone);
+        _cTimeZone = JJLCTimeZoneForTimeZone(_timeZone, _alwaysUseNSTimeZone);
     });
     pthread_rwlock_unlock(&_timeZoneVarsLock);
 
@@ -189,7 +189,7 @@ BOOL JJLIsValidFormatOptions(NSISO8601DateFormatOptions formatOptions) {
 
 + (NSString *)stringFromDate:(NSDate *)date timeZone:(NSTimeZone *)timeZone formatOptions:(NSISO8601DateFormatOptions)formatOptions
 {
-    timezone_t cTimeZone = JJLCTimeZoneForTimeZone(timeZone);
+    timezone_t cTimeZone = JJLCTimeZoneForTimeZone(timeZone, NO);
     NSString *string = nil;// JJLStringFromDate(date, _formatOptions, _cTimeZone, _timeZone);
     return string;
 }
@@ -201,11 +201,11 @@ static inline NSString *JJLStringFromDate(NSDate *date, NSISO8601DateFormatOptio
     }
     NSString *string = nil;
     double time = date.timeIntervalSince1970;// - [timeZone secondsFromGMTForDate:date];
-    double offset = cTimeZone ? 0 : -[timeZone secondsFromGMTForDate:date];
+    double offset = cTimeZone ? 0 : [timeZone secondsFromGMTForDate:date];
     char buffer[JJL_MAX_DATE_LENGTH] = {0};
     char *bufferPtr = (char *)buffer;
     int32_t firstWeekday = (int32_t)sFirstWeekday; // Use a copy of sFirstWeekday in case it changes
-    JJLFillBufferForDate(bufferPtr, time, firstWeekday, NO, (CFISO8601DateFormatOptions)formatOptions, cTimeZone, 0);
+    JJLFillBufferForDate(bufferPtr, time, firstWeekday, NO, (CFISO8601DateFormatOptions)formatOptions, cTimeZone, offset);
     /*time_t time = date.timeIntervalSince1970;// - [timeZone secondsFromGMTForDate:date];
     char buffer[kJJLMaxLength] = {0};
     JJLFillBufferForDate(buffer, time, NO, (CFISO8601DateFormatOptions)formatOptions);*/

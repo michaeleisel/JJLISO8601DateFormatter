@@ -208,8 +208,6 @@ __used static NSString *binaryTestRep(NSISO8601DateFormatOptions opts) {
 
 - (void)testFormattingAcrossAllOptions
 {
-    // NSTimeZone *brazilTimeZone = [NSTimeZone timeZoneWithAbbreviation:@"BRT"];
-    // appleFormatter.timeZone = brazilTimeZone;
     // Run through a couple locales with different starting days of the week
     for (NSLocale *locale in _differentLocales) {
         [self _setLocale:locale];
@@ -232,6 +230,15 @@ static inline bool JJLChangeHasOccurred(int64_t i, int64_t increment, int64_t en
     return JJLPercent((double)i / (double)end) != JJLPercent((i - (double)increment) / (double)end);
 }
 
+- (void)_testTimeZones:(NSArray <NSTimeZone *> *)timeZones alwaysUseNSTimeZone:(BOOL)alwaysUseNSTimeZone
+{
+    [_testFormatter setValue:@(alwaysUseNSTimeZone) forKey:NSStringFromSelector(@selector(alwaysUseNSTimeZone))];
+    for (NSTimeZone *timeZone in timeZones) {
+        _testFormatter.timeZone = _appleFormatter.timeZone = timeZone;
+        JJLTestStringFromDate(_testDate, _appleFormatter, _testFormatter);
+    }
+}
+
 - (void)testStringFromDateTimeZone
 {
     NSMutableArray <NSTimeZone *> *timeZones = [NSMutableArray array];
@@ -244,10 +251,8 @@ static inline bool JJLChangeHasOccurred(int64_t i, int64_t increment, int64_t en
     [timeZones addObject:[NSTimeZone systemTimeZone]];
     [timeZones addObject:[NSTimeZone timeZoneForSecondsFromGMT:0]];
 
-    for (NSTimeZone *timeZone in timeZones) {
-        _testFormatter.timeZone = _appleFormatter.timeZone = timeZone;
-        JJLTestStringFromDate(_testDate, _appleFormatter, _testFormatter);
-    }
+    [self _testTimeZones:timeZones alwaysUseNSTimeZone:YES];
+    [self _testTimeZones:timeZones alwaysUseNSTimeZone:NO];
 }
 
 - (void)testFormattingAcrossTimes

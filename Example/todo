@@ -2,3 +2,16 @@ test plan: tsan, asan, guard malloc, etc.
 figure out if we want to keep that header, "Copyright..." on each file
 check that the file header is always tzif2?
 get -dealloc working right, check for leaks
+make full test plan: test all supported OSes, test performance, and test unit tests
+-Werror?
+todo: does the C assert function turn off in release?
+allow for "+" unary operator
+asserts for invalid minute, year, etc.?
+todo: sizeof long?
+todo: max length correct? large numbers?
+all calls to -timeZone must go through property, not ivar, to be atomic
+use ios 9 and not 10 as minimum?
+distant future? distant past?
+todo: NSFormatter subclassing and secure coding!
+todo: do MRC properties automatically retain and release?
+clang format?
