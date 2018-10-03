@@ -18,13 +18,11 @@
 		1CD34D02EC9C728A6A039636D436F569 /* NSInvocation+OCMAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = FA77AF7086B37C50CF9E16041EFCBB66 /* NSInvocation+OCMAdditions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		1D3CDCDCDD27AC25A359DF0839FD400B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6604A7D69453B4569E4E4827FB9155A9 /* Foundation.framework */; };
 		1E86178770FA28D84F842E5301B8FCE2 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6604A7D69453B4569E4E4827FB9155A9 /* Foundation.framework */; };
-		2504F4208E436AABAD92ED9C919241BC /* itoa.h in Headers */ = {isa = PBXBuildFile; fileRef = 3B084DC6BFC48A562AFD83347419B69E /* itoa.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		27FE61A0600FB5271EA7277D4D484667 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6604A7D69453B4569E4E4827FB9155A9 /* Foundation.framework */; };
 		2C29ABF82C3C7C0F5DE3AAA4C2975375 /* OCMLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 8EBB630B2DAC2353B459788401945D97 /* OCMLocation.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		334CE5F8DE00E8D4FD85F4C644A31AFC /* JJLISO8601DateFormatter.h in Headers */ = {isa = PBXBuildFile; fileRef = A1C7099E49D7F1229749846001627742 /* JJLISO8601DateFormatter.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		3D159D347B9908C3BB57E42A8EB29871 /* OCMPassByRefSetter.h in Headers */ = {isa = PBXBuildFile; fileRef = FF83D4F2C0839CACBA0254DF31249D8E /* OCMPassByRefSetter.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		3D299CAA41D55E4950FC06710D29AE4A /* OCMRealObjectForwarder.h in Headers */ = {isa = PBXBuildFile; fileRef = A4FADCBA913FD62F7CD901CCA4EC50A6 /* OCMRealObjectForwarder.h */; settings = {ATTRIBUTES = (Project, ); }; };
-		4080B5088614D7AF7430EF49F03BD1E1 /* itoa.c in Sources */ = {isa = PBXBuildFile; fileRef = 13FEFC580EF761174108C4875D5FC657 /* itoa.c */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		40BA2C54E635E70E3721EEF46153A898 /* NSObject+OCMAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = D4D4B5FDC5B66DE7D5F274F4AA587F06 /* NSObject+OCMAdditions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		40BE9640ECD0F85906CF3491BFC0354A /* OCMInvocationExpectation.m in Sources */ = {isa = PBXBuildFile; fileRef = E90F1746941B3FFD6D567EBC527517F1 /* OCMInvocationExpectation.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		41B44EC9ADBC48D8ADD601284B6AE486 /* OCMRealObjectForwarder.m in Sources */ = {isa = PBXBuildFile; fileRef = 52FA65EDA8217AA85B34B2B0E96E642F /* OCMRealObjectForwarder.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -129,7 +127,6 @@
 		0F33D767E20309F374AA3E6B3FCD876C /* JJLISO8601DateFormatter.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = JJLISO8601DateFormatter.m; path = JJLISO8601DateFormatter/Classes/JJLISO8601DateFormatter.m; sourceTree = "<group>"; };
 		10FAB97978BBC66444E7B18A4F383E11 /* tzfile.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = tzfile.h; sourceTree = "<group>"; };
 		1357BC4A54BC9BDFCB4FC6AEAB6048A9 /* OCMock-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "OCMock-dummy.m"; sourceTree = "<group>"; };
-		13FEFC580EF761174108C4875D5FC657 /* itoa.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = itoa.c; path = JJLISO8601DateFormatter/Classes/itoa.c; sourceTree = "<group>"; };
 		14DC03CC218CD72500811A7E2B5B74E1 /* OCMockObject.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = OCMockObject.m; path = Source/OCMock/OCMockObject.m; sourceTree = "<group>"; };
 		16C1F2D4DE5FC51A8B6B736FC3F765F4 /* NSValue+OCMAdditions.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = "NSValue+OCMAdditions.h"; path = "Source/OCMock/NSValue+OCMAdditions.h"; sourceTree = "<group>"; };
 		1724C18E655D26341007BF1FC653703D /* OCMBlockCaller.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = OCMBlockCaller.h; path = Source/OCMock/OCMBlockCaller.h; sourceTree = "<group>"; };
@@ -143,7 +140,6 @@
 		3594F9D0AB59F55A90690086627866CD /* OCClassMockObject.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = OCClassMockObject.m; path = Source/OCMock/OCClassMockObject.m; sourceTree = "<group>"; };
 		36A59B5914E9892A9E4F3C1F2D74E7DD /* OCPartialMockObject.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = OCPartialMockObject.h; path = Source/OCMock/OCPartialMockObject.h; sourceTree = "<group>"; };
 		3A0974FBE25326D0D926C44BE86F8D8C /* OCMStubRecorder.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = OCMStubRecorder.m; path = Source/OCMock/OCMStubRecorder.m; sourceTree = "<group>"; };
-		3B084DC6BFC48A562AFD83347419B69E /* itoa.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = itoa.h; path = JJLISO8601DateFormatter/Classes/itoa.h; sourceTree = "<group>"; };
 		423185D37B935EAF9C0428B21D380861 /* JJLInternal.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = JJLInternal.h; path = JJLISO8601DateFormatter/Classes/JJLInternal.h; sourceTree = "<group>"; };
 		42353E60335E1AD7532CB1B3DE5E5C82 /* Pods-JJLISO8601DateFormatterTesting-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-JJLISO8601DateFormatterTesting-frameworks.sh"; sourceTree = "<group>"; };
 		42655445202B19F014C7105488916CCE /* Pods-JJLISO8601DateFormatterApp-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-JJLISO8601DateFormatterApp-acknowledgements.markdown"; sourceTree = "<group>"; };
@@ -310,8 +306,6 @@
 		55B66BB7D4A2830BADD6F7ECD7D5C6B2 /* JJLISO8601DateFormatter */ = {
 			isa = PBXGroup;
 			children = (
-				13FEFC580EF761174108C4875D5FC657 /* itoa.c */,
-				3B084DC6BFC48A562AFD83347419B69E /* itoa.h */,
 				69A697693E5FE33EFA6E505D71A369E4 /* JJLInternal.c */,
 				423185D37B935EAF9C0428B21D380861 /* JJLInternal.h */,
 				A1C7099E49D7F1229749846001627742 /* JJLISO8601DateFormatter.h */,
@@ -556,7 +550,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2504F4208E436AABAD92ED9C919241BC /* itoa.h in Headers */,
 				F6DB015986E0C351519D0D40490087E6 /* JJLInternal.h in Headers */,
 				334CE5F8DE00E8D4FD85F4C644A31AFC /* JJLISO8601DateFormatter.h in Headers */,
 				C2AE2310CA42956EA5A7EF80D394D8AB /* private.h in Headers */,
@@ -727,7 +720,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4080B5088614D7AF7430EF49F03BD1E1 /* itoa.c in Sources */,
 				58699ACDB6FD61D5A450EA7A2B97FB36 /* JJLInternal.c in Sources */,
 				87972200135670001C2ED112FEEAA75F /* JJLISO8601DateFormatter-dummy.m in Sources */,
 				AB7D933B0639CE5D92C9EC1D432D72FC /* JJLISO8601DateFormatter.m in Sources */,
