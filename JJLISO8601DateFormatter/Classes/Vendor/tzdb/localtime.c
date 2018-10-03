@@ -409,6 +409,13 @@ int JJLSafeOpen(const char *path, int mode) {
     return JJLSafeOpenInjection(path, mode, open);
 }
 
+bool JJLGoodVersion(const char *name) {
+    int fd = JJLSafeOpen(name, OPEN_MODE);
+    char header[5];
+    JJLSafeRead(fd, header, sizeof(header));
+    return memcmp(header, "TZif", 4) == 0 && (header[4] == '2' || header[4] == '1' || header[4] == '\0');
+}
+
 /* Load tz data from the file named NAME into *SP.  Read extended
    format if DOEXTEND.  Use *LSP for temporary storage.  Return 0 on
    success, an errno value on failure.  */
@@ -459,6 +466,9 @@ tzloadbody(char const *name, struct state *sp, bool doextend,
 	}
 	if (doaccess && access(name, R_OK) != 0)
 	  return errno;
+    if (!JJLGoodVersion(name)) {
+        return EINVAL;
+    }
 	fid = JJLSafeOpen(name, OPEN_MODE);
 	if (fid < 0)
 	  return errno;

@@ -23,22 +23,11 @@
 }
 
 static NSTimeZone *sGMTTimeZone = nil;
-static _Atomic(NSInteger) sFirstWeekday = 0;
 static NSMutableDictionary <NSString *, NSValue *> *sNameToTimeZoneValue;
 static pthread_rwlock_t sDictionaryLock = PTHREAD_RWLOCK_INITIALIZER;
 
 @synthesize formatOptions = _formatOptions;
 @synthesize timeZone = _timeZone;
-
-static void *kJJLCurrentLocaleContext = &kJJLCurrentLocaleContext;
-
-// Thread-safe because sFirstWeekday is the only thing being changed, and it is a simple primitive
-+ (void)_localeDidChange
-{
-    NSCalendar *gregorianCalendar = [NSCalendar calendarWithIdentifier:NSCalendarIdentifierGregorian];
-    gregorianCalendar.locale = [NSLocale currentLocale];
-    sFirstWeekday = gregorianCalendar.firstWeekday;
-}
 
 - (void)_performInitialSetupIfNecessary
 {
@@ -46,8 +35,7 @@ static void *kJJLCurrentLocaleContext = &kJJLCurrentLocaleContext;
     dispatch_once(&onceToken, ^{
         sGMTTimeZone = [[NSTimeZone timeZoneWithName:@"GMT"] retain];
         sNameToTimeZoneValue = [[NSMutableDictionary dictionary] retain];
-        [[NSNotificationCenter defaultCenter] addObserver:[self class] selector:@selector(_localeDidChange) name:NSCurrentLocaleDidChangeNotification object:nil];
-        [[self class] _localeDidChange];
+        JJLPerformInitialSetup();
     });
 }
 
@@ -190,8 +178,7 @@ BOOL JJLIsValidFormatOptions(NSISO8601DateFormatOptions formatOptions) {
 + (NSString *)stringFromDate:(NSDate *)date timeZone:(NSTimeZone *)timeZone formatOptions:(NSISO8601DateFormatOptions)formatOptions
 {
     timezone_t cTimeZone = JJLCTimeZoneForTimeZone(timeZone, NO);
-    NSString *string = nil;// JJLStringFromDate(date, _formatOptions, _cTimeZone, _timeZone);
-    return string;
+    return JJLStringFromDate(date, formatOptions, cTimeZone, timeZone);
 }
 
 static inline NSString *JJLStringFromDate(NSDate *date, NSISO8601DateFormatOptions formatOptions, timezone_t cTimeZone, NSTimeZone *timeZone)
@@ -200,15 +187,14 @@ static inline NSString *JJLStringFromDate(NSDate *date, NSISO8601DateFormatOptio
         return nil;
     }
     NSString *string = nil;
-    double time = date.timeIntervalSince1970;// - [timeZone secondsFromGMTForDate:date];
+    double time = date.timeIntervalSince1970;
     double offset = cTimeZone ? 0 : [timeZone secondsFromGMTForDate:date];
+    if (offset != 0) {
+        ;
+    }
     char buffer[JJL_MAX_DATE_LENGTH] = {0};
     char *bufferPtr = (char *)buffer;
-    int32_t firstWeekday = (int32_t)sFirstWeekday; // Use a copy of sFirstWeekday in case it changes
-    JJLFillBufferForDate(bufferPtr, time, firstWeekday, NO, (CFISO8601DateFormatOptions)formatOptions, cTimeZone, offset);
-    /*time_t time = date.timeIntervalSince1970;// - [timeZone secondsFromGMTForDate:date];
-    char buffer[kJJLMaxLength] = {0};
-    JJLFillBufferForDate(buffer, time, NO, (CFISO8601DateFormatOptions)formatOptions);*/
+    JJLFillBufferForDate(bufferPtr, time, NO, (CFISO8601DateFormatOptions)formatOptions, cTimeZone, offset);
     string = CFAutorelease(CFStringCreateWithCString(kCFAllocatorDefault, buffer, kCFStringEncodingUTF8));
     return string;
 }

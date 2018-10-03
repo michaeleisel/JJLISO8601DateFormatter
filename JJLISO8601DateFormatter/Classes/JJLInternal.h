@@ -4,4 +4,5 @@
 
 #define JJL_MAX_DATE_LENGTH 50
 
-void JJLFillBufferForDate(char *buffer, double timeInSeconds, int32_t firstWeekday, bool local, CFISO8601DateFormatOptions options, timezone_t timeZone, double fallbackOffset);
+void JJLFillBufferForDate(char *buffer, double timeInSeconds, bool local, CFISO8601DateFormatOptions options, timezone_t timeZone, double fallbackOffset);
+void JJLPerformInitialSetup(void);

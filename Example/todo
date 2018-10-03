@@ -1,6 +1,7 @@
-test plan: tsan, asan, guard malloc, etc.
+test plan: 32-bit simulator devices, real phone, tsan, asan, guard malloc
 figure out if we want to keep that header, "Copyright..." on each file
 check that the file header is always tzif2?
+mention all the licensees
 get -dealloc working right, check for leaks
 make full test plan: test all supported OSes, test performance, and test unit tests
 -Werror?
