@@ -9,36 +9,22 @@
 Pod::Spec.new do |s|
   s.name             = 'JJLISO8601DateFormatter'
   s.version          = '0.1.0'
-  s.summary          = 'A short description of JJLISO8601DateFormatter.'
-
-# This description is used to generate tags and improve search results.
-#   * Think: What does it do? Why did you write it? What is the focus?
-#   * Try to keep it short, snappy and to the point.
-#   * Write the description between the DESC delimiters below.
-#   * Finally, don't worry about the indent, CocoaPods strips it!
+  s.summary          = 'A 10x+ faster drop-in replacement for NSISO8601DateFormatter'
 
   s.description      = <<-DESC
-TODO: Add long description of the pod here.
+'JJLISO8601DateFormatter is a 10x+ faster drop-in replacement for NSISO8601DateFormatter. It provides efficient, ISO 8601 compliant, date formatting.'
                        DESC
 
   s.homepage         = 'https://github.com/michaeleisel/JJLISO8601DateFormatter'
-  # s.screenshots     = 'www.example.com/screenshots_1', 'www.example.com/screenshots_2'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
-  s.author           = { 'michaeleisel' => 'michael.eisel@gmail.com' }
+  s.author           = { 'Michael Eisel' => 'michael.eisel@gmail.com' }
   s.source           = { :git => 'https://github.com/michaeleisel/JJLISO8601DateFormatter.git', :tag => s.version.to_s }
-  # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
   s.ios.deployment_target = '10.0'
+  s.osx.deployment_target = '10.13'
 
   s.source_files = 'JJLISO8601DateFormatter/Classes/**/*'
   s.public_header_files = 'JJLISO8601DateFormatter/Classes/JJLISO8601DateFormatter.h'
 
   s.requires_arc = false
-  
-  # s.resource_bundles = {
-  #   'JJLISO8601DateFormatter' => ['JJLISO8601DateFormatter/Assets/*.png']
-  # }
-
-  # s.frameworks = 'UIKit', 'MapKit'
-  # s.dependency 'AFNetworking', '~> 2.3'
 end

@@ -133,6 +133,7 @@ static timezone_t JJLCTimeZoneForTimeZone(NSTimeZone *timeZone, BOOL alwaysUseNS
     [super dealloc];
 
     [_timeZone autorelease];
+    [_fallbackFormatter autorelease];
     pthread_rwlock_destroy(&_timeZoneVarsLock);
 }
 
@@ -218,6 +219,30 @@ static inline NSString *JJLStringFromDate(NSDate *date, NSISO8601DateFormatOptio
     JJLFillBufferForDate(bufferPtr, time, (CFISO8601DateFormatOptions)formatOptions, cTimeZone, offset);
     string = CFAutorelease(CFStringCreateWithCString(kCFAllocatorDefault, buffer, kCFStringEncodingUTF8));
     return string;
+}
+
+- (BOOL)getObjectValue:(out id  _Nullable *)date forString:(NSString *)string errorDescription:(out NSString * _Nullable *)error
+{
+    if (!date) {
+        return NO;
+    }
+
+    *date = [self dateFromString:string];
+    BOOL success = !!(*date);
+    if (error) {
+        *error = success ? nil : @"Malformed date string";
+    }
+    return success;
+}
+
+- (NSString *)stringForObjectValue:(id)object
+{
+    if (![object isKindOfClass:[NSDate class]]) {
+        return nil;
+    }
+
+    NSDate *date = (NSDate *)object;
+    return [self stringFromDate:date];
 }
 
 @end

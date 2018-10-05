@@ -86,9 +86,11 @@ typedef struct {
     CFTimeInterval testDuration = 0;
     NSISO8601DateFormatter *appleFormatter = [[NSISO8601DateFormatter alloc] init];
     JJLISO8601DateFormatter *testFormatter = [[JJLISO8601DateFormatter alloc] init];
+    NSISO8601DateFormatWithFractionalSeconds
+    NSISO8601DateFormatWithInternetDateTime
     appleFormatter.formatOptions = testFormatter.formatOptions = options;
     appleFormatter.formatOptions = options | NSISO8601DateFormatWithColonSeparatorInTimeZone;
-    NSInteger iterations = 1e5;
+    NSInteger iterations = 1e6;
     NSTimeInterval endInterval = endDate.timeIntervalSince1970;
     NSTimeInterval startInterval = startDate.timeIntervalSince1970;
     NSTimeInterval increment = (endInterval - startInterval) / iterations;
@@ -106,7 +108,8 @@ typedef struct {
     }
     ({
         CFTimeInterval startTime = CACurrentMediaTime();
-        if (stringToDate) {
+        JJLISO8601DateFormatter *formatter = [[JJLISO8601DateFormatter alloc] init];
+        /*if (stringToDate) {
             for (NSString *string in strings) {
                 [testFormatter dateFromString:string];
             }
@@ -114,7 +117,7 @@ typedef struct {
             for (NSDate *date in dates) {
                 [testFormatter stringFromDate:date];
             }
-        }
+        }*/
         CFTimeInterval endTime = CACurrentMediaTime();
         NSLog(@"JJL: %@", @(endTime - startTime));
         testDuration = endTime - startTime;
@@ -124,7 +127,8 @@ typedef struct {
     if (includeApple) {
         ({
             CFTimeInterval startTime = CACurrentMediaTime();
-            if (stringToDate) {
+            NSISO8601DateFormatter *formatter = [[NSISO8601DateFormatter alloc] init];
+            /*if (stringToDate) {
                 for (NSString *string in strings) {
                     [appleFormatter dateFromString:string];
                 }
@@ -132,7 +136,7 @@ typedef struct {
                 for (NSDate *date in dates) {
                     [appleFormatter stringFromDate:date];
                 }
-            }
+            }*/
             CFTimeInterval endTime = CACurrentMediaTime();
             NSLog(@"Apple: %@", @(endTime - startTime));
         });

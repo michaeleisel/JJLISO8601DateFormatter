@@ -288,11 +288,16 @@ static inline bool JJLChangeHasOccurred(int64_t i, int64_t increment, int64_t en
 
     for (NSNumber *alwaysUseNSTimeZone in @[@NO, @YES]) {
         [_testFormatter setValue:alwaysUseNSTimeZone forKey:NSStringFromSelector(@selector(alwaysUseNSTimeZone))];
-        for (NSTimeZone *timeZone in timeZones) {
+        NSArray <NSTimeZone *> *timeZonesToTest = nil;
+        if ([alwaysUseNSTimeZone boolValue]) {
+            timeZonesToTest = [timeZones subarrayWithRange:NSMakeRange(0, 10)];
+        } else {
+            timeZonesToTest = timeZones;
+        }
+        for (NSTimeZone *timeZone in timeZonesToTest) {
             _testFormatter.timeZone = _appleFormatter.timeZone = timeZone;
             int32_t increment = kJJLSecondsPerDay * 23 + kJJLSecondsPerHour * 7 + kJJLSecondsPerMinute * 5 + 7.513;
             [self _testDatesInParallelWithStartInterval:0 endInterval:50 * kJJLSecondsPerYear increment:increment];
-            // [self _testDatesInParallelWithStartInterval:0 endInterval:50 * kJJLSecondsPerYear increment:increment];
             // Don't use a fixed seed for the random numbers, trade consistency for greater test coverage
             [self _testBlockInParallelWithStart:0 end:1e3 increment:1 block:^(NSTimeInterval unused) {
                 NSTimeInterval interval = arc4random_uniform(70 * kJJLSecondsPerYear);
@@ -327,6 +332,19 @@ static inline bool JJLChangeHasOccurred(int64_t i, int64_t increment, int64_t en
     end = kJJLSecondsPerYear * 50;
     increment = moreThorough ? 1001 : 10001;
     [self _testDatesInParallelWithStartInterval:0 endInterval:end increment:increment];
+}
+
+- (void)testNSFormatter
+{
+    NSString *testString = [_testFormatter stringFromDate:_testDate];
+    XCTAssertEqualObjects([_testFormatter stringForObjectValue:_testDate], testString);
+    NSDate *date = nil;
+    [_testFormatter getObjectValue:&date forString:testString errorDescription:nil];
+    XCTAssertEqualObjects(date, _testDate);
+    NSString *error = nil;
+    [_testFormatter getObjectValue:&date forString:@"" errorDescription:&error];
+    XCTAssertNil(date);
+    XCTAssertNotNil(error);
 }
 
 @end

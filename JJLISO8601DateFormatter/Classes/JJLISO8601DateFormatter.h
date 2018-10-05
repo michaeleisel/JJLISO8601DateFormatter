@@ -5,7 +5,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 // Note that this class is not thread-safe
-@interface JJLISO8601DateFormatter : NSObject // <NSSecureCoding>
+@interface JJLISO8601DateFormatter : NSFormatter <NSSecureCoding>
 
 @property (null_resettable, copy) NSTimeZone *timeZone;  // The default time zone is GMT.
 
