@@ -49,6 +49,10 @@ Things are also easier because, for ISO 8601, we only need to support Gregorian 
 
 For nonsensical format options (week of year but no year) and malformed date strings, the behavior is slightly different. But for all intents and purposes, it is the exact same. Feel free to submit a ticket if you find otherwise.
 
+##### Why is the prefix "JJL"?
+
+Because it's easy to type with the left pinky on the shift key.
+
 ##### Are there other Apple libraries ripe for optimization?
 
 Yes, there are a lot, the question is which ones are worth optimizing. Feel free to request optimizations for libraries that are causing performance issues for you.
