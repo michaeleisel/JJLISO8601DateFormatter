@@ -21,7 +21,7 @@ Pod::Spec.new do |s|
   s.source           = { :git => 'https://github.com/michaeleisel/JJLISO8601DateFormatter.git', :tag => s.version.to_s }
 
   s.ios.deployment_target = '10.0'
-  s.osx.deployment_target = '10.13'
+  # s.osx.deployment_target = '10.13'
 
   s.source_files = 'JJLISO8601DateFormatter/Classes/**/*'
   s.public_header_files = 'JJLISO8601DateFormatter/Classes/JJLISO8601DateFormatter.h'
