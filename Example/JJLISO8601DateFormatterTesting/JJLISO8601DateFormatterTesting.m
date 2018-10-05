@@ -166,6 +166,12 @@ __used static NSString *binaryTestRep(NSISO8601DateFormatOptions opts) {
     XCTAssert([correctStrings isEqualToArray:testStrings]);
 }
 
+- (void)testLeapSeconds
+{
+    NSTimeInterval interval = [_appleFormatter dateFromString:@"2016-12-31T23:59:58.000Z"].timeIntervalSince1970;
+    [self _testDatesInParallelWithStartInterval:interval endInterval:interval + 4 increment:0.01];
+}
+
 - (void)testNilDate
 {
     JJLTestStringFromDate(nil, _appleFormatter, _testFormatter);
