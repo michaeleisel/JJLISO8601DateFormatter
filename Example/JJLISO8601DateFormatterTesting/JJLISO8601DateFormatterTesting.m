@@ -53,12 +53,28 @@ void *jjl_tzalloc(char const *name);
     XCTAssert(goodTimezone != NULL);
 }
 
+- (void)testClassStringFromDate
+{
+    for (NSTimeZone *timeZone in @[_pacificTimeZone, _brazilTimeZone]) {
+        NSString *testString = [JJLISO8601DateFormatter stringFromDate:_testDate timeZone:timeZone formatOptions:_testFormatter.formatOptions];
+        NSString *appleString = [NSISO8601DateFormatter stringFromDate:_testDate timeZone:timeZone formatOptions:_testFormatter.formatOptions];
+        XCTAssertEqualObjects(testString, appleString);
+    }
+}
+
 static void OS_ALWAYS_INLINE JJLTestStringFromDate(NSDate *date, NSISO8601DateFormatter *appleFormatter, JJLISO8601DateFormatter *testFormatter) {
     NSString *appleString = [appleFormatter stringFromDate:date];
     NSString *testString = [testFormatter stringFromDate:date];
     // Don't use XCTAssert here for fear that it might be too slow
     if (appleString != testString && ![appleString isEqualToString:testString]) {
         NSLog(@"Mismatch for %@, apple: %@, test: %@", date, appleString, testString);
+        abort();
+    }
+    NSDate *testDate = [testFormatter dateFromString:testString];
+    NSDate *appleDate = [appleFormatter dateFromString:testString];
+    // NSLog(@"%@", appleDate);
+    if (testDate != appleDate && ![testDate isEqualToDate:appleDate]) {
+        NSLog(@"%@: %@", @(testDate.timeIntervalSince1970 - appleDate.timeIntervalSince1970), binaryTestRep(appleFormatter.formatOptions));
         abort();
     }
 }
@@ -186,31 +202,34 @@ __used static NSString *binaryTestRep(NSISO8601DateFormatOptions opts) {
     NSISO8601DateFormatOptions options[] = {
         NSISO8601DateFormatWithYear | NSISO8601DateFormatWithWeekOfYear,
         NSISO8601DateFormatWithYear | NSISO8601DateFormatWithDay,
-        NSISO8601DateFormatWithYear | NSISO8601DateFormatWithWeekOfYear | NSISO8601DateFormatWithDay,
         NSISO8601DateFormatWithYear | NSISO8601DateFormatWithWeekOfYear | NSISO8601DateFormatWithMonth | NSISO8601DateFormatWithDay,
-        NSISO8601DateFormatWithWeekOfYear | NSISO8601DateFormatWithMonth | NSISO8601DateFormatWithDay,
+        NSISO8601DateFormatWithYear | NSISO8601DateFormatWithWeekOfYear | NSISO8601DateFormatWithDay,
         NSISO8601DateFormatWithMonth | NSISO8601DateFormatWithDay,
+        // Don't test these, as they are essentially broken (even Apple's implementation can't round-trip a date when the week is near 53
+        // NSISO8601DateFormatWithMonth | NSISO8601DateFormatWithWeekOfYear | NSISO8601DateFormatWithDay,
     };
     NSInteger optionsLength = sizeof(options) / sizeof(options[0]);
     for (NSInteger i = 0; i < optionsLength; i++) {
         _appleFormatter.formatOptions = options[i];
         _testFormatter.formatOptions = options[i];
-        for (NSTimeInterval interval = kJJLSecondsPerYear + 12 * kJJLSecondsPerHour; interval < 50 * kJJLSecondsPerYear; interval += 1 * kJJLSecondsPerDay) {
-            NSDate *date = [NSDate dateWithTimeIntervalSince1970:interval];
-            JJLTestStringFromDate(date, _appleFormatter, _testFormatter);
-        }
+        [self _testDatesInParallelWithStartInterval:0 endInterval:50 * kJJLSecondsPerYear increment:1 * kJJLSecondsPerDay];
     }
 }
 
 - (void)testFormattingAcrossAllOptions
 {
-    for (NSISO8601DateFormatOptions options = 0; options < (NSISO8601DateFormatOptions)(1 << 12); options++) {
-        if (!JJLIsValidFormatOptions(options)) {
-            continue;
+    NSTimeZone *gmtTimeZone = [NSTimeZone timeZoneForSecondsFromGMT:0];
+    for (NSTimeZone *timeZone in @[_pacificTimeZone, _brazilTimeZone, gmtTimeZone]) {
+        _appleFormatter.timeZone = _testFormatter.timeZone = timeZone;
+        for (NSISO8601DateFormatOptions options = 0; options < (NSISO8601DateFormatOptions)(1 << 12); options++) {
+            if (!JJLIsValidFormatOptions(options)) {
+                continue;
+            }
+            // options = 65;/////
+            _appleFormatter.formatOptions = options;
+            _testFormatter.formatOptions = options;
+            JJLTestStringFromDate(_testDate, _appleFormatter, _testFormatter);
         }
-        _appleFormatter.formatOptions = options;
-        _testFormatter.formatOptions = options;
-        JJLTestStringFromDate(_testDate, _appleFormatter, _testFormatter);
     }
 }
 
@@ -220,6 +239,31 @@ static inline NSInteger JJLPercent(double d) {
 
 static inline bool JJLChangeHasOccurred(int64_t i, int64_t increment, int64_t end) {
     return JJLPercent((double)i / (double)end) != JJLPercent((i - (double)increment) / (double)end);
+}
+
+- (void)_testBlockInParallelWithStart:(NSTimeInterval)start end:(NSTimeInterval)end increment:(NSTimeInterval)increment block:(void (^)(NSTimeInterval))block
+{
+    dispatch_group_t group = dispatch_group_create();
+    dispatch_queue_t queue = dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0);
+    NSInteger groupSize = 16;
+    for (NSInteger i = 0; i < groupSize; i++) {
+        dispatch_group_async(group, queue, ^{
+            NSInteger chunkSize = (end - start) / groupSize;
+            NSTimeInterval blockStart = start + chunkSize * i;
+            for (NSTimeInterval interval = blockStart; interval < blockStart + chunkSize; interval += increment) {
+                block(interval);
+            }
+        });
+    }
+    dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
+}
+
+- (void)_testDatesInParallelWithStartInterval:(NSTimeInterval)startInterval endInterval:(NSTimeInterval)endInterval increment:(NSTimeInterval)increment
+{
+    [self _testBlockInParallelWithStart:startInterval end:endInterval increment:increment block:^(NSTimeInterval interval) {
+        NSDate *date = [NSDate dateWithTimeIntervalSince1970:interval];
+        JJLTestStringFromDate(date, self->_appleFormatter, self->_testFormatter);
+    }];
 }
 
 - (void)testManyAcrossTimeZones
@@ -236,21 +280,19 @@ static inline bool JJLChangeHasOccurred(int64_t i, int64_t increment, int64_t en
     [timeZones addObject:[NSTimeZone systemTimeZone]];
     [timeZones addObject:[NSTimeZone timeZoneForSecondsFromGMT:0]];
 
-    for (NSNumber *alwaysUseNSTimeZone in @[@YES, @NO]) {
+    for (NSNumber *alwaysUseNSTimeZone in @[@NO, @YES]) {
         [_testFormatter setValue:alwaysUseNSTimeZone forKey:NSStringFromSelector(@selector(alwaysUseNSTimeZone))];
         for (NSTimeZone *timeZone in timeZones) {
             _testFormatter.timeZone = _appleFormatter.timeZone = timeZone;
             int32_t increment = kJJLSecondsPerDay * 23 + kJJLSecondsPerHour * 7 + kJJLSecondsPerMinute * 5 + 7.513;
-            for (NSInteger interval = 0; interval < 50 * kJJLSecondsPerYear; interval += increment) {
-                NSDate *date = [NSDate dateWithTimeIntervalSince1970:interval];
-                JJLTestStringFromDate(date, _appleFormatter, _testFormatter);
-            }
+            [self _testDatesInParallelWithStartInterval:0 endInterval:50 * kJJLSecondsPerYear increment:increment];
+            // [self _testDatesInParallelWithStartInterval:0 endInterval:50 * kJJLSecondsPerYear increment:increment];
             // Don't use a fixed seed for the random numbers, trade consistency for greater test coverage
-            for (NSInteger i = 0; i < 1e3; i++) {
+            [self _testBlockInParallelWithStart:0 end:1e3 increment:1 block:^(NSTimeInterval unused) {
                 NSTimeInterval interval = arc4random_uniform(70 * kJJLSecondsPerYear);
                 NSDate *date = [NSDate dateWithTimeIntervalSince1970:interval];
-                JJLTestStringFromDate(date, _appleFormatter, _testFormatter);
-            }
+                JJLTestStringFromDate(date, self->_appleFormatter, self->_testFormatter);
+            }];
         }
     }
 }
@@ -262,10 +304,7 @@ static inline bool JJLChangeHasOccurred(int64_t i, int64_t increment, int64_t en
         [_testFormatter setValue:alwaysUseNSTimeZone forKey:NSStringFromSelector(@selector(alwaysUseNSTimeZone))];
         NSTimeInterval start = [_appleFormatter dateFromString:@"2017-01-01T12:00:00.000Z"].timeIntervalSince1970;
         _testFormatter.timeZone = _appleFormatter.timeZone = _brazilTimeZone;
-        for (NSInteger interval = start; interval < start + kJJLSecondsPerYear + 10 * kJJLSecondsPerDay; interval += 7 * kJJLSecondsPerMinute) {
-            NSDate *date = [NSDate dateWithTimeIntervalSince1970:interval];
-            JJLTestStringFromDate(date, _appleFormatter, _testFormatter);
-        }
+        [self _testDatesInParallelWithStartInterval:start endInterval:start + kJJLSecondsPerYear + 10 * kJJLSecondsPerDay increment:17 * kJJLSecondsPerMinute];
     }
 }
 
@@ -274,37 +313,14 @@ static inline bool JJLChangeHasOccurred(int64_t i, int64_t increment, int64_t en
     BOOL moreThorough = NO;
     // Don't go back past 1582, an important date in ISO 8601, because at that point it seems like Apple's doesn't work
     int64_t end = -1LL * kJJLSecondsPerYear * (1970 - 1583);
-    int64_t increment = moreThorough ? -10001 : -100001;
+    int64_t increment = moreThorough ? 10001 : 100001;
     NSLog(@"Counting down...");
-    for (int64_t i = 0; i >= end; i += increment) {
-        if (JJLChangeHasOccurred(i, increment, end)) {
-            NSLog(@"%zd%% complete", JJLPercent(i / (double)end));
-        }
-        NSDate *date = [NSDate dateWithTimeIntervalSince1970:i];
-        JJLTestStringFromDate(date, _appleFormatter, _testFormatter);
-    }
+    [self _testDatesInParallelWithStartInterval:end endInterval:0 increment:increment];
 
     NSLog(@"Counting up...");
     end = kJJLSecondsPerYear * 50;
     increment = moreThorough ? 1001 : 10001;
-    for (int64_t i = 0; i < end; i += increment) {
-        if (JJLChangeHasOccurred(i, increment, end)) {
-            NSLog(@"%zd%% complete", JJLPercent(i / (double)end));
-        }
-        NSDate *date = [NSDate dateWithTimeIntervalSince1970:i];
-        JJLTestStringFromDate(date, _appleFormatter, _testFormatter);
-    }
+    [self _testDatesInParallelWithStartInterval:0 endInterval:end increment:increment];
 }
-
-/*- (void)testPerformanceExample {
-    // This is an example of a performance test case.
-    JJLISO8601DateFormatter *formatter = [[JJLISO8601DateFormatter alloc] init];
-    NSDate *date = [NSDate dateWithTimeIntervalSince1970:400];
-    [self measureBlock:^{
-        for (NSInteger i = 0; i < 1e3; i++) {
-            [formatter stringFromDate:date];
-        }
-    }];
-}*/
 
 @end

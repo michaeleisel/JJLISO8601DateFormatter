@@ -1461,6 +1461,27 @@ jjl_tzfree(timezone_t sp)
 
 #endif
 
+static const struct ttinfo *jjl_ttisp(struct state const *sp, const time_t t)
+{
+    register int            i;
+    if (sp->timecnt == 0 || t < sp->ats[0]) {
+        i = sp->defaulttype;
+    } else {
+        register int    lo = 1;
+        register int    hi = sp->timecnt;
+
+        while (lo < hi) {
+            register int    mid = (lo + hi) >> 1;
+
+            if (t < sp->ats[mid])
+                hi = mid;
+            else    lo = mid + 1;
+        }
+        i = (int) sp->types[lo - 1];
+    }
+    return &(sp->ttis[i]);
+}
+
 /*
 ** The easy way to behave "as if no library function calls" localtime
 ** is to not call it, so we drop its guts into "localsub", which can be
@@ -1481,8 +1502,7 @@ localsub(struct state const *sp, time_t const *timep, int_fast32_t setname,
 	 struct tm *const tmp)
 {
 	register const struct ttinfo *	ttisp;
-	register int			i;
-	register struct tm *		result;
+    register struct tm *        result;
 	const time_t			t = *timep;
 
 	if (sp == NULL) {
@@ -1521,22 +1541,7 @@ localsub(struct state const *sp, time_t const *timep, int_fast32_t setname,
 			}
 			return result;
 	}
-	if (sp->timecnt == 0 || t < sp->ats[0]) {
-		i = sp->defaulttype;
-	} else {
-		register int	lo = 1;
-		register int	hi = sp->timecnt;
-
-		while (lo < hi) {
-			register int	mid = (lo + hi) >> 1;
-
-			if (t < sp->ats[mid])
-				hi = mid;
-			else	lo = mid + 1;
-		}
-		i = (int) sp->types[lo - 1];
-	}
-	ttisp = &sp->ttis[i];
+    ttisp = jjl_ttisp(sp, t);
 	/*
 	** To get (wrong) behavior that's compatible with System V Release 2.0
 	** you'd replace the statement below with

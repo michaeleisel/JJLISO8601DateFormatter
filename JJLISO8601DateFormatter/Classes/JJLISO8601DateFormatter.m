@@ -19,6 +19,7 @@
 @implementation JJLISO8601DateFormatter {
     timezone_t _cTimeZone;
     pthread_rwlock_t _timeZoneVarsLock;
+    NSISO8601DateFormatter *_fallbackFormatter;
 }
 
 static NSTimeZone *sGMTTimeZone = nil;
@@ -61,7 +62,12 @@ static pthread_rwlock_t sDictionaryLock = PTHREAD_RWLOCK_INITIALIZER;
 - (void)setFormatOptions:(NSISO8601DateFormatOptions)formatOptions
 {
     NSAssert(JJLIsValidFormatOptions(formatOptions), @"Invalid format option, must satisfy formatOptions == 0 || !(formatOptions & ~(NSISO8601DateFormatWithYear | NSISO8601DateFormatWithMonth | NSISO8601DateFormatWithWeekOfYear | NSISO8601DateFormatWithDay | NSISO8601DateFormatWithTime | NSISO8601DateFormatWithTimeZone | NSISO8601DateFormatWithSpaceBetweenDateAndTime | NSISO8601DateFormatWithDashSeparatorInDate | NSISO8601DateFormatWithColonSeparatorInTime | NSISO8601DateFormatWithColonSeparatorInTimeZone | NSISO8601DateFormatWithFractionalSeconds | NSISO8601DateFormatWithFullDate | NSISO8601DateFormatWithFullTime | NSISO8601DateFormatWithInternetDateTime))");
-    _formatOptions = formatOptions;
+    pthread_rwlock_wrlock(&_timeZoneVarsLock);
+    ({
+        _formatOptions = formatOptions;
+        _fallbackFormatter.formatOptions = formatOptions;
+    });
+    pthread_rwlock_unlock(&_timeZoneVarsLock);
 }
 
 // This getter exists because timeZone is designated as an atomic
@@ -138,6 +144,12 @@ static timezone_t JJLCTimeZoneForTimeZone(NSTimeZone *timeZone, BOOL alwaysUseNS
     ({
         _timeZone = timeZone ?: sGMTTimeZone;
         _cTimeZone = JJLCTimeZoneForTimeZone(_timeZone, _alwaysUseNSTimeZone);
+        if (!_cTimeZone) {
+            _fallbackFormatter = [[NSISO8601DateFormatter alloc] init];
+            _fallbackFormatter.formatOptions = _formatOptions;
+        } else {
+            _fallbackFormatter = nil;
+        }
     });
     pthread_rwlock_unlock(&_timeZoneVarsLock);
 
@@ -168,7 +180,23 @@ BOOL JJLIsValidFormatOptions(NSISO8601DateFormatOptions formatOptions) {
 
 - (nullable NSDate *)dateFromString:(NSString *)string
 {
-    return nil;
+    if (!string || string.length == 0 || _formatOptions == 0) {
+        return nil;
+    }
+
+    if (!_cTimeZone) {
+        return [_fallbackFormatter dateFromString:string];
+    }
+
+    BOOL errorOccurred = NO;
+    const char *cString = [string UTF8String];
+    NSTimeInterval interval = 0;
+    pthread_rwlock_rdlock(&_timeZoneVarsLock);
+    ({
+        interval = JJLTimeIntervalForString(cString, (int32_t)strlen(cString), (CFISO8601DateFormatOptions)_formatOptions, _cTimeZone, &errorOccurred);
+    });
+    pthread_rwlock_unlock(&_timeZoneVarsLock);
+    return errorOccurred ? nil : [NSDate dateWithTimeIntervalSince1970:interval];
 }
 
 + (NSString *)stringFromDate:(NSDate *)date timeZone:(NSTimeZone *)timeZone formatOptions:(NSISO8601DateFormatOptions)formatOptions
@@ -185,9 +213,9 @@ static inline NSString *JJLStringFromDate(NSDate *date, NSISO8601DateFormatOptio
     NSString *string = nil;
     double time = date.timeIntervalSince1970;
     double offset = cTimeZone ? 0 : [timeZone secondsFromGMTForDate:date];
-    char buffer[JJL_MAX_DATE_LENGTH] = {0};
+    char buffer[kJJLMaxDateLength] = {0};
     char *bufferPtr = (char *)buffer;
-    JJLFillBufferForDate(bufferPtr, time, NO, (CFISO8601DateFormatOptions)formatOptions, cTimeZone, offset);
+    JJLFillBufferForDate(bufferPtr, time, (CFISO8601DateFormatOptions)formatOptions, cTimeZone, offset);
     string = CFAutorelease(CFStringCreateWithCString(kCFAllocatorDefault, buffer, kCFStringEncodingUTF8));
     return string;
 }

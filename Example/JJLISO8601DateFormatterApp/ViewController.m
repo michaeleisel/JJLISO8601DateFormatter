@@ -59,27 +59,29 @@ typedef struct {
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+
     char *origBuffer, *buffer;
     origBuffer = buffer = calloc(1, 5);
     *buffer++ = 'F';
 
-    /*({
-        for (NSInteger j = 0; j < 4; j++) {
-            CFTimeInterval startTime = CACurrentMediaTime();
-            for (NSInteger i = 0; i < 1e5; i++) {
-                for (int time = 0; time < 12; time++) {
-                    JJLString string = {0};
-                    char chars[5];
-                    string.buffer = chars;
-                    // JJLFillBufferWithUpTo19(time, &string);
-                }
-            }
-            CFTimeInterval endTime = CACurrentMediaTime();
-            NSLog(@"zz: %@", @(endTime - startTime));
+    JJLISO8601DateFormatter *mf = [[JJLISO8601DateFormatter alloc] init];
+    mf.formatOptions = NSISO8601DateFormatWithInternetDateTime;
+    [mf dateFromString:@"1991-11-11T09:08:00.000+00:08"];
+
+    NSISO8601DateFormatter *f = [[NSISO8601DateFormatter alloc] init];
+    f.formatOptions = NSISO8601DateFormatWithYear | NSISO8601DateFormatWithMonth;
+    f.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"PST"];
+
+    f.formatOptions = NSISO8601DateFormatWithMonth | NSISO8601DateFormatWithDay | NSISO8601DateFormatWithWeekOfYear;
+    for (NSTimeInterval interval = NSTimeIntervalSince1970 - 10 * 60 * 60 * 24; interval < NSTimeIntervalSince1970 + 365 * 60 * 60 * 24; interval += 24 * 60 * 60) {
+        NSDate *date1 = [NSDate dateWithTimeIntervalSince1970:interval];
+        NSString *string = [f stringFromDate:date1];
+        NSDate *date2 = [f dateFromString:string];
+        if (![date1 isEqualToDate:date2]) {
+            ;
         }
-    });
-    return;*/
-    // [self testSimpleFormatting];
+    }
+
     NSTimeZone *brazilTimeZone = [NSTimeZone timeZoneWithAbbreviation:@"BRT"];
     NSTimeZone *americaTimeZone = [NSTimeZone timeZoneWithName:@"America/Indiana/Indianapolis"];
     NSTimeZone *gmtTimeZone = [NSTimeZone timeZoneWithName:@"GMT"];
@@ -87,21 +89,6 @@ typedef struct {
     NSISO8601DateFormatOptions fullOptions = NSISO8601DateFormatWithInternetDateTime | NSISO8601DateFormatWithColonSeparatorInTimeZone | NSISO8601DateFormatWithFractionalSeconds;
     NSDate *currentStartDate = [NSDate dateWithTimeIntervalSinceNow:-15 * DAYS];
     NSDate *currentEndDate = [NSDate dateWithTimeIntervalSinceNow:15 * DAYS];
-
-    [self _testPerformanceWithStartDate:currentStartDate endDate:currentEndDate includeApple:NO formatOptions:fullOptions];
-    [self _testPerformanceWithStartDate:currentStartDate endDate:currentEndDate includeApple:NO formatOptions:fullOptions];
-    [self _testPerformanceWithStartDate:currentStartDate endDate:currentEndDate includeApple:NO formatOptions:fullOptions];
-    [self _testPerformanceWithStartDate:currentStartDate endDate:currentEndDate includeApple:NO formatOptions:fullOptions];
-    [self _testPerformanceWithStartDate:currentStartDate endDate:currentEndDate includeApple:NO formatOptions:fullOptions];
-    return;
-    /*CFTimeInterval fullDuration = [self _testPerformanceWithStartDate:currentStartDate endDate:currentEndDate includeApple:NO formatOptions:fullOptions];
-    for (NSNumber *number in @[@(NSISO8601DateFormatWithMonth | NSISO8601DateFormatWithDay), @(NSISO8601DateFormatWithTime), @(NSISO8601DateFormatWithYear), @(NSISO8601DateFormatWithTimeZone), @(NSISO8601DateFormatWithDashSeparatorInDate | NSISO8601DateFormatWithColonSeparatorInTime)]) {
-        NSISO8601DateFormatOptions optionsMask = [number unsignedIntegerValue];
-        NSISO8601DateFormatOptions options = fullOptions & (~optionsMask);
-        // NSISO8601DateFormatOptions options = NSISO8601DateFormatWithYear; // fullOptions & (~optionsMask);
-        CFTimeInterval duration = [self _testPerformanceWithStartDate:currentStartDate endDate:currentEndDate includeApple:NO formatOptions:options];
-        NSLog(@"When taking away %@, changes by %.2lf%%", binaryTestRep(optionsMask), ((duration - fullDuration) * 100));
-    }*/
 
     for (NSTimeZone *timeZone in @[brazilTimeZone, americaTimeZone, gmtTimeZone]) {
         NSLog(@"%@", timeZone.name);
@@ -121,6 +108,7 @@ typedef struct {
     NSISO8601DateFormatter *appleFormatter = [[NSISO8601DateFormatter alloc] init];
     JJLISO8601DateFormatter *testFormatter = [[JJLISO8601DateFormatter alloc] init];
     appleFormatter.formatOptions = testFormatter.formatOptions = options;
+    appleFormatter.formatOptions = options | NSISO8601DateFormatWithColonSeparatorInTimeZone;
     NSInteger iterations = 1e6;
     NSTimeInterval endInterval = endDate.timeIntervalSince1970;
     NSTimeInterval startInterval = startDate.timeIntervalSince1970;

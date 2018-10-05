@@ -2,7 +2,8 @@
 
 #import <time.h>
 
-#define JJL_MAX_DATE_LENGTH 50
+static const int32_t kJJLMaxDateLength = 50; // Extra to be safe
 
-void JJLFillBufferForDate(char *buffer, double timeInSeconds, bool local, CFISO8601DateFormatOptions options, timezone_t timeZone, double fallbackOffset);
+void JJLFillBufferForDate(char *buffer, double timeInSeconds, CFISO8601DateFormatOptions options, timezone_t timeZone, double fallbackOffset);
+double JJLTimeIntervalForString(const char *string, int32_t length, CFISO8601DateFormatOptions options, timezone_t timeZone, bool *errorOccurred);
 void JJLPerformInitialSetup(void);
