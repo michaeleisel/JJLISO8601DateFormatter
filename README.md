@@ -2,9 +2,9 @@
 
 `JJLISO8601DateFormatter` is a thread-safe, feature complete, drop-in replacement for `NSISO8601DateFormatter` that is 10x or more faster for both conversion to and from dates.
 
-Date to string: **12x+** faster
-String to date: **10x** faster
-Object creation: **10x** faster
+- Date to string: **12x+** faster
+- String to date: **10x** faster
+- Object creation: **10x** faster
 
 ## Usage
 
@@ -47,7 +47,7 @@ Things are also easier because, for ISO 8601, we only need to support Gregorian 
 
 ##### Is it literally the same for everything?
 
-For nonsensical format options (week of year but no year) and malformed date strings, the behavior is slightly different. For all intents and purposes, it is the exact same. Feel free to submit a ticket if you find otherwise.
+For nonsensical format options (week of year but no year) and malformed date strings, the behavior is slightly different. But for all intents and purposes, it is the exact same. Feel free to submit a ticket if you find otherwise.
 
 ##### Are there other Apple libraries ripe for optimization?
 
