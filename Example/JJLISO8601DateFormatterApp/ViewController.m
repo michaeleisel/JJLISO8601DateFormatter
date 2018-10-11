@@ -67,17 +67,21 @@ typedef struct {
     NSISO8601DateFormatOptions fullOptions = NSISO8601DateFormatWithInternetDateTime | NSISO8601DateFormatWithColonSeparatorInTimeZone | NSISO8601DateFormatWithFractionalSeconds;
     NSDate *currentStartDate = [NSDate dateWithTimeIntervalSinceNow:-15 * DAYS];
     NSDate *currentEndDate = [NSDate dateWithTimeIntervalSinceNow:15 * DAYS];
-    BOOL stringToDate = YES;
 
-    for (NSTimeZone *timeZone in @[brazilTimeZone, americaTimeZone, gmtTimeZone]) {
-        NSLog(@"%@", timeZone.name);
-        NSLog(@"Recent dates");
-        [self _testPerformanceWithStartDate:currentStartDate endDate:currentEndDate includeApple:YES formatOptions:fullOptions stringToDate:stringToDate];
+    NSLog(@"All benchmarks show the time taken for the same number of runs (which can change between each type of benchmark)");
+    for (NSNumber *stringToDateNumber in @[@NO, @YES]) {
+        BOOL stringToDate = [stringToDateNumber boolValue];
+        NSLog(@"----- %@ -----", stringToDate ? @"String to date" : @"Date to string");
+        for (NSTimeZone *timeZone in @[brazilTimeZone, americaTimeZone, gmtTimeZone]) {
+            NSLog(@"%@", timeZone.name);
+            NSLog(@"Recent dates");
+            [self _testPerformanceWithStartDate:currentStartDate endDate:currentEndDate includeApple:YES formatOptions:fullOptions stringToDate:stringToDate];
 
-        NSLog(@"Dates from 1970 until now");
-        NSDate *epochDate = [NSDate dateWithTimeIntervalSince1970:0];
-        [self _testPerformanceWithStartDate:epochDate endDate:currentEndDate includeApple:YES formatOptions:fullOptions stringToDate:stringToDate];
-        NSLog(@"\n\n\n");
+            NSLog(@"Dates from 1970 until now");
+            NSDate *epochDate = [NSDate dateWithTimeIntervalSince1970:0];
+            [self _testPerformanceWithStartDate:epochDate endDate:currentEndDate includeApple:YES formatOptions:fullOptions stringToDate:stringToDate];
+            NSLog(@"\n\n\n");
+        }
     }
 }
 
@@ -86,17 +90,15 @@ typedef struct {
     CFTimeInterval testDuration = 0;
     NSISO8601DateFormatter *appleFormatter = [[NSISO8601DateFormatter alloc] init];
     JJLISO8601DateFormatter *testFormatter = [[JJLISO8601DateFormatter alloc] init];
-    NSISO8601DateFormatWithFractionalSeconds
-    NSISO8601DateFormatWithInternetDateTime
     appleFormatter.formatOptions = testFormatter.formatOptions = options;
     appleFormatter.formatOptions = options | NSISO8601DateFormatWithColonSeparatorInTimeZone;
-    NSInteger iterations = 1e6;
+    NSInteger iterations = stringToDate ? 1e5 : 1e6;
     NSTimeInterval endInterval = endDate.timeIntervalSince1970;
     NSTimeInterval startInterval = startDate.timeIntervalSince1970;
     NSTimeInterval increment = (endInterval - startInterval) / iterations;
     NSMutableArray <NSDate *> *dates = [NSMutableArray array];
     NSMutableArray <NSString *> *strings = [NSMutableArray array];
-    NSInteger sleepMicros = 2e5;
+    useconds_t sleepMicros = 2e5;
     for (NSInteger interval = startInterval; interval < endInterval; interval += increment) {
         NSDate *date = [NSDate dateWithTimeIntervalSince1970:interval];
         if (stringToDate) {
@@ -108,8 +110,7 @@ typedef struct {
     }
     ({
         CFTimeInterval startTime = CACurrentMediaTime();
-        JJLISO8601DateFormatter *formatter = [[JJLISO8601DateFormatter alloc] init];
-        /*if (stringToDate) {
+        if (stringToDate) {
             for (NSString *string in strings) {
                 [testFormatter dateFromString:string];
             }
@@ -117,7 +118,7 @@ typedef struct {
             for (NSDate *date in dates) {
                 [testFormatter stringFromDate:date];
             }
-        }*/
+        }
         CFTimeInterval endTime = CACurrentMediaTime();
         NSLog(@"JJL: %@", @(endTime - startTime));
         testDuration = endTime - startTime;
@@ -127,8 +128,7 @@ typedef struct {
     if (includeApple) {
         ({
             CFTimeInterval startTime = CACurrentMediaTime();
-            NSISO8601DateFormatter *formatter = [[NSISO8601DateFormatter alloc] init];
-            /*if (stringToDate) {
+            if (stringToDate) {
                 for (NSString *string in strings) {
                     [appleFormatter dateFromString:string];
                 }
@@ -136,7 +136,7 @@ typedef struct {
                 for (NSDate *date in dates) {
                     [appleFormatter stringFromDate:date];
                 }
-            }*/
+            }
             CFTimeInterval endTime = CACurrentMediaTime();
             NSLog(@"Apple: %@", @(endTime - startTime));
         });
