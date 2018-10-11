@@ -6,6 +6,8 @@
 - String to date: **10x** faster
 - Object creation: **10x** faster
 
+More info on how the benchmark was done is [here](https://github.com/michaeleisel/JJLISO8601DateFormatter#how-is-the-benchmarking-done).
+
 ## Usage
 
 Because it is drop-in, you can simply replace the word `NSISO8601DateFormatter` with `JJLISO8601DateFormatter` and add the header include, `#import <JJLISODateFormatter/JJLISODateFormatter.h>`.
@@ -57,9 +59,9 @@ Because it's easy to type with the left pinky on the shift key.
 
 Yes, there are a lot, the question is which ones are worth optimizing. Feel free to request optimizations for libraries that are causing performance issues for you.
 
-### How was the benchmarking done?
+### How is the benchmarking done?
 
-It was done by timing thousands of iterations with `NSISO8601DateFormatOptionsWithInternetDateTime | NSISO8601DateFormatWithFractionalSeconds` for the format options. Two ranges of dates are tested: from 15 days before now to 15 days after now, and from 1970 to now.
+It's done by timing many date to string and string to date conversions across two ranges (15 days before now to 15 days after, from 1970 to now), three time zones, and `NSISO8601DateFormatOptionsWithInternetDateTime | NSISO8601DateFormatWithFractionalSeconds` for the format options. The benchmark code is located in `-viewDidLoad` of the Example project's [view controller](https://github.com/michaeleisel/JJLISO8601DateFormatter/blob/master/Example/JJLISO8601DateFormatterApp/ViewController.m), and you can get nice benchmarking output yourself by running that project. I normally do testing on my iPhone 8, with the occasional double check on other devices. Obviously the numbers can vary.
 
 ## Future Improvements and Contribution
 

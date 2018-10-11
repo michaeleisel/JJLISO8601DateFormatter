@@ -69,6 +69,8 @@ typedef struct {
     NSDate *currentEndDate = [NSDate dateWithTimeIntervalSinceNow:15 * DAYS];
 
     NSLog(@"All benchmarks show the time taken for the same number of runs (which can change between each type of benchmark)");
+    NSLog(@"----- Construction -----");
+    [self _testConstructionPerformance];
     for (NSNumber *stringToDateNumber in @[@NO, @YES]) {
         BOOL stringToDate = [stringToDateNumber boolValue];
         NSLog(@"----- %@ -----", stringToDate ? @"String to date" : @"Date to string");
@@ -82,6 +84,27 @@ typedef struct {
             [self _testPerformanceWithStartDate:epochDate endDate:currentEndDate includeApple:YES formatOptions:fullOptions stringToDate:stringToDate];
             NSLog(@"\n\n\n");
         }
+    }
+}
+
+- (void)_testConstructionPerformance
+{
+    NSInteger iterations = 1e4;
+    @autoreleasepool {
+        CFTimeInterval startTime = CACurrentMediaTime();
+        for (NSInteger i = 0; i < iterations; i++) {
+            [[JJLISO8601DateFormatter alloc] init];
+        }
+        CFTimeInterval endTime = CACurrentMediaTime();
+        NSLog(@"JJL: %f", endTime - startTime);
+    }
+    @autoreleasepool {
+        CFTimeInterval startTime = CACurrentMediaTime();
+        for (NSInteger i = 0; i < iterations; i++) {
+            [[NSISO8601DateFormatter alloc] init];
+        }
+        CFTimeInterval endTime = CACurrentMediaTime();
+        NSLog(@"Apple: %f", endTime - startTime);
     }
 }
 
@@ -108,7 +131,7 @@ typedef struct {
             [dates addObject:date];
         }
     }
-    ({
+    @autoreleasepool {
         CFTimeInterval startTime = CACurrentMediaTime();
         if (stringToDate) {
             for (NSString *string in strings) {
@@ -122,11 +145,11 @@ typedef struct {
         CFTimeInterval endTime = CACurrentMediaTime();
         NSLog(@"JJL: %@", @(endTime - startTime));
         testDuration = endTime - startTime;
-    });
+    }
     usleep(sleepMicros);
 
     if (includeApple) {
-        ({
+        @autoreleasepool {
             CFTimeInterval startTime = CACurrentMediaTime();
             if (stringToDate) {
                 for (NSString *string in strings) {
@@ -139,7 +162,7 @@ typedef struct {
             }
             CFTimeInterval endTime = CACurrentMediaTime();
             NSLog(@"Apple: %@", @(endTime - startTime));
-        });
+        }
         usleep(sleepMicros);
     }
 
