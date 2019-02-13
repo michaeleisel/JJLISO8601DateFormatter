@@ -1,15 +1,15 @@
 {
   "name": "JJLISO8601DateFormatter",
   "version": "0.1.0",
-  "summary": "A short description of JJLISO8601DateFormatter.",
-  "description": "TODO: Add long description of the pod here.",
+  "summary": "A 10x+ faster drop-in replacement for NSISO8601DateFormatter",
+  "description": "'JJLISO8601DateFormatter is a 10x+ faster drop-in replacement for NSISO8601DateFormatter. It provides efficient, ISO 8601 compliant, date formatting.'",
   "homepage": "https://github.com/michaeleisel/JJLISO8601DateFormatter",
   "license": {
     "type": "MIT",
     "file": "LICENSE"
   },
   "authors": {
-    "michaeleisel": "michael.eisel@gmail.com"
+    "Michael Eisel": "michael.eisel@gmail.com"
   },
   "source": {
     "git": "https://github.com/michaeleisel/JJLISO8601DateFormatter.git",

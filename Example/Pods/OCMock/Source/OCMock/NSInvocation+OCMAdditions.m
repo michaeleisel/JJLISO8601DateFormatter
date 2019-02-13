@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2006-2016 Erik Doernenburg and contributors
+ *  Copyright (c) 2006-2018 Erik Doernenburg and contributors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
  *  not use these files except in compliance with the License. You may obtain
@@ -80,7 +80,7 @@ static NSString *const OCMRetainedObjectArgumentsKey = @"OCMRetainedObjectArgume
     for(NSUInteger index = 2; index < numberOfArguments; index++)
     {
         const char *argumentType = [[self methodSignature] getArgumentTypeAtIndex:index];
-        if(OCMIsObjectType(argumentType) && !OCMIsClassType(argumentType))
+        if(OCMIsObjectType(argumentType))
         {
             id argument;
             [self getArgument:&argument atIndex:index];
@@ -102,7 +102,7 @@ static NSString *const OCMRetainedObjectArgumentsKey = @"OCMRetainedObjectArgume
     }
 
     const char *returnType = [[self methodSignature] methodReturnType];
-    if(OCMIsObjectType(returnType) && !OCMIsClassType(returnType))
+    if(OCMIsObjectType(returnType))
     {
         id returnValue;
         [self getReturnValue:&returnValue];
