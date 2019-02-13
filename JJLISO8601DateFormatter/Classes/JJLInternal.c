@@ -16,8 +16,8 @@
 static bool sIsIOS11OrHigher = false;
 static timezone_t sGMTTimeZone = NULL;
 
-static const int32_t kJJLItoaStringsLength = 3000;
-static const int32_t kJJLItoaEachStringLength = 4;
+static const int64_t kJJLItoaStringsLength = 3000;
+static const int64_t kJJLItoaEachStringLength = 4;
 
 static char sItoaStrings[kJJLItoaStringsLength][kJJLItoaEachStringLength];
 
@@ -31,9 +31,9 @@ void JJLPerformInitialSetup() {
     }
 
     memset(sItoaStrings, '0', sizeof(sItoaStrings));
-    for (int32_t i = 0; i < kJJLItoaStringsLength; i++) {
-        int32_t num = i;
-        int32_t digit = kJJLItoaEachStringLength - 1;
+    for (int64_t i = 0; i < kJJLItoaStringsLength; i++) {
+        int64_t num = i;
+        int64_t digit = kJJLItoaEachStringLength - 1;
         while (num > 0) {
             sItoaStrings[i][digit] = '0' + num % 10;
             num /= 10;
@@ -43,30 +43,30 @@ void JJLPerformInitialSetup() {
     sGMTTimeZone = jjl_tzalloc("GMT");
 }
 
-static inline void JJLPushBuffer(char **string, char *newBuffer, int32_t size) {
+static inline void JJLPushBuffer(char **string, char *newBuffer, int64_t size) {
     memcpy(*string, newBuffer, size);
     *string += size;
 }
 
-static inline void JJLPushNumber(char **string, int32_t num, int32_t fixedDigitLength) {
+static inline void JJLPushNumber(char **string, int64_t num, int64_t fixedDigitLength) {
     if (0 <= num && num < kJJLItoaStringsLength) {
         JJLPushBuffer(string, &(sItoaStrings[num][kJJLItoaEachStringLength - fixedDigitLength]), fixedDigitLength);
     } else {
         // Slow path, but will practically never be needed
         char str[fixedDigitLength + 1];
-        snprintf(str, sizeof(str), "%04d", num);
-        JJLPushBuffer(string, str, (int32_t)strlen(str));
+        snprintf(str, sizeof(str), "%04lld", num);
+        JJLPushBuffer(string, str, (int64_t)strlen(str));
     }
 }
 
 static inline void JJLFillBufferWithFractionalSeconds(double time, char **string) {
     double unused = 0;
     double fractionalComponent = modf(time, &unused);
-    int32_t millis = (int32_t)lround(fractionalComponent * 1000);
+    int64_t millis = (int64_t)lround(fractionalComponent * 1000);
     JJLPushNumber(string, millis, 3);
 }
 
-static inline int32_t JJLDaysInYear(int32_t year) {
+static inline int64_t JJLDaysInYear(int64_t year) {
     bool isLeap = (year % 400 == 0) || (year % 4 == 0 && year % 100 != 0);
     return isLeap ? 366 : 365;
 }
@@ -106,12 +106,12 @@ void JJLFillBufferForDate(char *buffer, double timeInSeconds, CFISO8601DateForma
     // For some reason, the week of the year is never shown if all the components of internet date time are shown
     bool showWeekOfYear = !isInternetDateTime && !!(options & kCFISO8601DateFormatWithWeekOfYear);
     bool showDate = showYear || showMonth || showDay || showWeekOfYear;
-    int32_t daysAfterFirstWeekday = (components.tm_wday - 1 + 7) % 7;
-    int32_t year = components.tm_year + 1900;
+    int64_t daysAfterFirstWeekday = (components.tm_wday - 1 + 7) % 7;
+    int64_t year = components.tm_year + 1900;
     bool usePreviousYear = showWeekOfYear && daysAfterFirstWeekday - components.tm_yday > 7 - 4;
     bool useNextYear = showWeekOfYear && components.tm_yday - daysAfterFirstWeekday + 7 - JJLDaysInYear(year) >= 4;
     if (showYear) {
-        int32_t yearToShow = year;
+        int64_t yearToShow = year;
         if (usePreviousYear) {
             yearToShow--;
         } else if (useNextYear) {
@@ -130,11 +130,11 @@ void JJLFillBufferForDate(char *buffer, double timeInSeconds, CFISO8601DateForma
             *buffer++ = '-';
         }
         *buffer++ = 'W';
-        int32_t week = 0;
+        int64_t week = 0;
         if (useNextYear) {
             week = 0;
         } else {
-            int32_t daysToDivide = components.tm_yday - daysAfterFirstWeekday;
+            int64_t daysToDivide = components.tm_yday - daysAfterFirstWeekday;
             if (usePreviousYear) {
                 daysToDivide += JJLDaysInYear(year - 1);
             }
@@ -181,7 +181,7 @@ void JJLFillBufferForDate(char *buffer, double timeInSeconds, CFISO8601DateForma
         }
     }
     if (options & kCFISO8601DateFormatWithTimeZone) {
-        int32_t offset = (int32_t)components.tm_gmtoff;
+        int64_t offset = components.tm_gmtoff;
         if (offset == 0) {
             *buffer++ = 'Z';
         } else {
@@ -193,9 +193,9 @@ void JJLFillBufferForDate(char *buffer, double timeInSeconds, CFISO8601DateForma
                 sign = '+';
             }
             bool showColonSeparatorInTimeZone = !!(options & kCFISO8601DateFormatWithColonSeparatorInTimeZone);
-            int32_t hours = offset / (60 * 60);
-            int32_t minutes = offset % (60 * 60) / 60;
-            int32_t seconds = offset % 60;
+            int64_t hours = offset / (60 * 60);
+            int64_t minutes = offset % (60 * 60) / 60;
+            int64_t seconds = offset % 60;
             *buffer++ = sign;
             JJLPushNumber(&buffer, hours, 2);
             if (showColonSeparatorInTimeZone) {
@@ -212,11 +212,9 @@ void JJLFillBufferForDate(char *buffer, double timeInSeconds, CFISO8601DateForma
     }
 }
 
-static const int32_t kJJLDigits[][10] = {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}, {0, 10, 20, 30, 40, 50, 60, 70, 80, 90}, {0, 100, 200, 300, 400, 500, 600, 700, 800, 900}, {0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000}};
-
-static inline int32_t JJLConsumeNumber(const char **stringPtr, const char *end, int32_t maxLength, bool *errorOccurred) {
-    char *string = *stringPtr;
-    int32_t length = 0;
+static inline int64_t JJLConsumeNumber(const char **stringPtr, const char *end, int64_t maxLength, bool *errorOccurred) {
+    const char *string = *stringPtr;
+    int64_t length = 0;
     bool isNegative = false;
     if (unlikely(string < end && *string == '-')) {
         isNegative = true;
@@ -275,22 +273,22 @@ static inline void JJLConsumeSeparator(const char **string, const char *end, boo
     (*string)++;
 }
 
-static inline bool JJLIsLeapYear(int32_t year) {
+static inline bool JJLIsLeapYear(int64_t year) {
     return ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0);
 }
 
-static inline int32_t JJLStartingDayOfWeekForYear(int32_t y) {
+static inline int64_t JJLStartingDayOfWeekForYear(int64_t y) {
     // Sakamoto's method, from https://en.wikipedia.org/wiki/Determination_of_the_day_of_the_week#Implementation-dependent_methods
-    int32_t d = 1;
-    int32_t m = 1;
-    int32_t t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
+    int64_t d = 1;
+    int64_t m = 1;
+    int64_t t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
     y -= m < 3;
-    int32_t sakamotoResult = (y + y/4 - y/100 + y/400 + t[m-1] + d) % 7;
+    int64_t sakamotoResult = (y + y/4 - y/100 + y/400 + t[m-1] + d) % 7;
     // Shift from Sunday to Monday
     return (sakamotoResult - 1 + 7) % 7;
 }
 
-static int32_t JJLConsumeFractionalSeconds(const char **string, const char *end, bool *errorOccurred) {
+static double JJLConsumeFractionalSeconds(const char **string, const char *end, bool *errorOccurred) {
     if (*string < end) {
         char c = **string;
         if (c == '.' || c == ',') {
@@ -317,7 +315,7 @@ static int32_t JJLConsumeFractionalSeconds(const char **string, const char *end,
     }
 }
 
-static inline int32_t JJLConsumeTimeZone(const char **string, const char *end, bool separator, bool *errorOccurred) {
+static inline int64_t JJLConsumeTimeZone(const char **string, const char *end, bool separator, bool *errorOccurred) {
     if (*string >= end) {
         *errorOccurred = true;
         return 0;
@@ -332,24 +330,24 @@ static inline int32_t JJLConsumeTimeZone(const char **string, const char *end, b
             isNegative = true;
         }
         (*string)++;
-        int32_t hours = JJLConsumeNumber(string, end, 2, errorOccurred);
+        int64_t hours = JJLConsumeNumber(string, end, 2, errorOccurred);
         if (separator) {
             JJLConsumeCharacter(string, end, ':', errorOccurred);
         }
-        int32_t minutes = JJLConsumeNumber(string, end, 2, errorOccurred);
-        int32_t seconds = 0;
+        int64_t minutes = JJLConsumeNumber(string, end, 2, errorOccurred);
+        int64_t seconds = 0;
         if (*string < end) { // ":xx" for the seconds
             if (separator) {
                 JJLConsumeCharacter(string, end, ':', errorOccurred);
             }
             seconds = JJLConsumeNumber(string, end, 2, errorOccurred);
         }
-        int32_t absValue = hours * 60 * 60 + minutes * 60 + seconds;
+        int64_t absValue = hours * 60 * 60 + minutes * 60 + seconds;
         return isNegative ? -absValue : absValue;
     }
 }
 
-double JJLTimeIntervalForString(const char *string, int32_t length, CFISO8601DateFormatOptions options, timezone_t timeZone, bool *errorOccurred) {
+double JJLTimeIntervalForString(const char *string, int64_t length, CFISO8601DateFormatOptions options, timezone_t timeZone, bool *errorOccurred) {
     if ((options & (options - 1)) == 0) {
         *errorOccurred = true;
         return 0;
@@ -377,21 +375,21 @@ double JJLTimeIntervalForString(const char *string, int32_t length, CFISO8601Dat
     // For some reason, the week of the year is never shown if all the components of internet date time are shown
     bool showWeekOfYear = !isInternetDateTime && !!(options & kCFISO8601DateFormatWithWeekOfYear);
     bool showDate = showYear || showMonth || showDay || showWeekOfYear;
-    int32_t dayOffset = 1;
-    int32_t year = showYear ? JJLConsumeNumber(&string, end, 4, errorOccurred) : 2000;
-    int32_t firstMonday = (7 - JJLStartingDayOfWeekForYear(year)) % 7;
+    int64_t dayOffset = 1;
+    int64_t year = showYear ? JJLConsumeNumber(&string, end, 4, errorOccurred) : 2000;
+    int64_t firstMonday = (7 - JJLStartingDayOfWeekForYear(year)) % 7;
     if (showWeekOfYear) {
         dayOffset += firstMonday < 4 ? firstMonday : firstMonday - 7;
     }
-    components.tm_year = year - 1900;
+    components.tm_year = (int32_t)(year - 1900);
 
     if (showMonth) {
         if (showDateSeparator && showYear) {
             JJLConsumeSeparator(&string, end, errorOccurred);
         }
-        int32_t month = JJLConsumeNumber(&string, end, 2, errorOccurred) - 1;
+        int64_t month = JJLConsumeNumber(&string, end, 2, errorOccurred) - 1;
         if (!showWeekOfYear) {
-            components.tm_mon = month;
+            components.tm_mon = (int32_t)month;
         }
     }
 
@@ -400,7 +398,7 @@ double JJLTimeIntervalForString(const char *string, int32_t length, CFISO8601Dat
             JJLConsumeSeparator(&string, end, errorOccurred);
         }
         JJLConsumeCharacter(&string, end, 'W', errorOccurred);
-        int32_t weeks = -1 + JJLConsumeNumber(&string, end, 2, errorOccurred);
+        int64_t weeks = -1 + JJLConsumeNumber(&string, end, 2, errorOccurred);
         dayOffset += weeks * 7;
     }
 
@@ -416,13 +414,13 @@ double JJLTimeIntervalForString(const char *string, int32_t length, CFISO8601Dat
     }
 
     if (showMonth) {
-        components.tm_mday = dayOffset;
+        components.tm_mday = (int32_t)dayOffset;
     } else {
-        int32_t febDays = JJLIsLeapYear(year) ? 29 : 28;
-        int32_t daysInMonth[] = {31, febDays, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 365 /*week of year*/};
-        int32_t month = 0;
+        int64_t febDays = JJLIsLeapYear(year) ? 29 : 28;
+        int64_t daysInMonth[] = {31, febDays, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 365 /*week of year*/};
+        int64_t month = 0;
         for (; month < 12; month++) {
-            int32_t monthDays = daysInMonth[month];
+            int64_t monthDays = daysInMonth[month];
             if (dayOffset <= monthDays) {
                 break;
             }
@@ -432,29 +430,29 @@ double JJLTimeIntervalForString(const char *string, int32_t length, CFISO8601Dat
             components.tm_mon = 0;
             components.tm_year++;
         } else {
-            components.tm_mon = month;
+            components.tm_mon = (int32_t)month;
         }
-        components.tm_mday = dayOffset;
+        components.tm_mday = (int32_t)dayOffset;
     }
 
-    int32_t millis = 0;
+    double fraction = 0;
     if (showTime) {
         if (showDate) {
             char separator = timeSeparatorIsSpace ? ' ' : 'T';
             JJLConsumeCharacter(&string, end, separator, errorOccurred);
         }
-        components.tm_hour = JJLConsumeNumber(&string, end, 2, errorOccurred);
+        components.tm_hour = (int32_t)JJLConsumeNumber(&string, end, 2, errorOccurred);
         // components.tm_hour--;
         if (showTimeSeparator) {
             JJLConsumeSeparator(&string, end, errorOccurred);
         }
-        components.tm_min = JJLConsumeNumber(&string, end, 2, errorOccurred);
+        components.tm_min = (int32_t)JJLConsumeNumber(&string, end, 2, errorOccurred);
         if (showTimeSeparator) {
             JJLConsumeSeparator(&string, end, errorOccurred);
         }
-        components.tm_sec = JJLConsumeNumber(&string, end, 2, errorOccurred);
+        components.tm_sec = (int32_t)JJLConsumeNumber(&string, end, 2, errorOccurred);
         if (showFractionalSeconds) {
-            millis = JJLConsumeFractionalSeconds(&string, end, errorOccurred);
+            fraction = JJLConsumeFractionalSeconds(&string, end, errorOccurred);
         }
     }
     if (showTimeZone) {
