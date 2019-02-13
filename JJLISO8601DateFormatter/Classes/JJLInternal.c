@@ -9,6 +9,7 @@
 #import <stdio.h>
 #import "tzfile.h"
 #import <stdlib.h>
+#import <limits.h>
 #import <dispatch/dispatch.h>
 
 #import "JJLInternal.h"
@@ -306,6 +307,16 @@ static int32_t JJLConsumeFractionalSeconds(const char **string, const char *end,
     // const char *numberEnd = *string + 3 < end ? *string + 3 : end;
     int32_t num = JJLConsumeNumber(string, end, 3, errorOccurred);
     int32_t length = (int32_t)(*string - origString);
+
+    // Consume any leftover part of the decimal and discard it
+    while (*string < end) {
+        char c = **string;
+        if (c < '0' || c > '9') {
+            break;
+        }
+        (*string)++;
+    }
+
     if (length == 0) {
         return 0;
     } else if (length == 1) {
