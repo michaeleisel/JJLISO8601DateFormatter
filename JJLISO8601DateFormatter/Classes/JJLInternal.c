@@ -12,6 +12,7 @@
 #import <dispatch/dispatch.h>
 
 #import "JJLInternal.h"
+#import "JJLPow10.h"
 
 static bool sIsIOS11OrHigher = false;
 static timezone_t sGMTTimeZone = NULL;
@@ -227,24 +228,16 @@ static inline int64_t JJLConsumeNumber(const char **stringPtr, const char *end, 
         }
         length++;
     }
-    if (unlikely(length > 4)) {
-        return isNegative ? -atoi(string) : atoi(string);
-    }
 
     if (unlikely(length == 0)) {
         *errorOccurred = true;
         return 0;
     }
 
-    int32_t number = 0;
-    for (int32_t i = 0; i < length; i++) {
-        char c = string[length - 1 - i];
-        if (unlikely(!('0' <= c && c <= '9'))) {
-            *errorOccurred = true;
-            return 0;
-        }
-        int32_t digit = c - '0';
-        number += kJJLDigits[i][digit];
+    int64_t number = 0;
+    for (int64_t i = 0; i < length; i++) {
+        int64_t digit = string[i] - '0';
+        number = number * 10 + digit;
     }
     *stringPtr += length;
     return isNegative ? -number : number;
@@ -302,17 +295,13 @@ static double JJLConsumeFractionalSeconds(const char **string, const char *end, 
     const char *origString = *string;
     // Set end as a way of limiting the number of chars consumed
     // const char *numberEnd = *string + 3 < end ? *string + 3 : end;
-    int32_t num = JJLConsumeNumber(string, end, 3, errorOccurred);
-    int32_t length = (int32_t)(*string - origString);
+    int64_t num = JJLConsumeNumber(string, end, 3, errorOccurred);
+    int64_t length = (int64_t)(*string - origString);
     if (length == 0) {
         return 0;
-    } else if (length == 1) {
-        return num * 100;
-    } else if (length == 2) {
-        return num * 10;
-    } else { // length == 3
-        return num;
     }
+    long double ld = (long double)num;
+    return ld / JJLPow10(length);
 }
 
 static inline int64_t JJLConsumeTimeZone(const char **string, const char *end, bool separator, bool *errorOccurred) {
@@ -469,5 +458,5 @@ double JJLTimeIntervalForString(const char *string, int64_t length, CFISO8601Dat
     }
 
     time_t time = jjl_mktime_z(timeZone, &components);
-    return time + millis / 1000.0;
+    return time + fraction;
 }

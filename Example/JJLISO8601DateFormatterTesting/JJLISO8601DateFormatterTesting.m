@@ -62,6 +62,15 @@ void *jjl_tzalloc(char const *name);
     }
 }
 
+static void OS_ALWAYS_INLINE JJLTestString(NSString *testString, NSISO8601DateFormatter *appleFormatter, JJLISO8601DateFormatter *testFormatter) {
+    NSDate *testDate = [testFormatter dateFromString:testString];
+    NSDate *appleDate = [appleFormatter dateFromString:testString];
+    if (testDate != appleDate && ![testDate isEqualToDate:appleDate]) {
+        NSLog(@"%@: %@", @(testDate.timeIntervalSince1970 - appleDate.timeIntervalSince1970), binaryTestRep(appleFormatter.formatOptions));
+        abort();
+    }
+}
+
 static void OS_ALWAYS_INLINE JJLTestStringFromDate(NSDate *date, NSISO8601DateFormatter *appleFormatter, JJLISO8601DateFormatter *testFormatter) {
     NSString *appleString = [appleFormatter stringFromDate:date];
     NSString *testString = [testFormatter stringFromDate:date];
@@ -70,13 +79,7 @@ static void OS_ALWAYS_INLINE JJLTestStringFromDate(NSDate *date, NSISO8601DateFo
         NSLog(@"Mismatch for %@, apple: %@, test: %@", date, appleString, testString);
         abort();
     }
-    NSDate *testDate = [testFormatter dateFromString:testString];
-    NSDate *appleDate = [appleFormatter dateFromString:testString];
-    // NSLog(@"%@", appleDate);
-    if (testDate != appleDate && ![testDate isEqualToDate:appleDate]) {
-        NSLog(@"%@: %@", @(testDate.timeIntervalSince1970 - appleDate.timeIntervalSince1970), binaryTestRep(appleFormatter.formatOptions));
-        abort();
-    }
+    JJLTestString(appleString, appleFormatter, testFormatter);
 }
 
 // Helper for use with the debugger
@@ -164,6 +167,12 @@ __used static NSString *binaryTestRep(NSISO8601DateFormatOptions opts) {
     // todo: Throw some extra reads in for fun
     dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
     XCTAssert([correctStrings isEqualToArray:testStrings]);
+}
+
+- (void)testLongDecimals
+{
+    _appleFormatter.formatOptions = _testFormatter.formatOptions = NSISO8601DateFormatWithFullDate | NSISO8601DateFormatWithFullTime | NSISO8601DateFormatWithFractionalSeconds;
+    JJLTestString(@"2018-08-17T02:14:02.662762Z", _appleFormatter, _testFormatter);
 }
 
 - (void)testLeapSeconds
