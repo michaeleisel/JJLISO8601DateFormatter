@@ -3,6 +3,10 @@ This application makes use of the following third party libraries:
 
 ## JJLISO8601DateFormatter
 
+All files in the tzdb directory are in the public domain
+
+For everything else:
+
 Copyright (c) 2018 michaeleisel <michael.eisel@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

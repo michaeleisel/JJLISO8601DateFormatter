@@ -20,11 +20,11 @@ Pod::Spec.new do |s|
   s.author           = { 'Michael Eisel' => 'michael.eisel@gmail.com' }
   s.source           = { :git => 'https://github.com/michaeleisel/JJLISO8601DateFormatter.git', :tag => s.version.to_s }
 
-  s.ios.deployment_target = '10.0'
-  # s.osx.deployment_target = '10.13'
+  s.ios.deployment_target = '11.0'
+  s.osx.deployment_target = '10.13'
 
-  s.source_files = 'Sources/**/*'
-  s.public_header_files = 'Sources/JJLISO8601DateFormatter.h'
+  s.source_files = 'Sources/JJLISO8601DateFormatter/**/*'
+  s.public_header_files = 'Sources/JJLISO8601DateFormatter/JJLISO8601DateFormatter.h'
 
-  s.requires_arc = false
+  # s.requires_arc = false # todo: put back in later
 end

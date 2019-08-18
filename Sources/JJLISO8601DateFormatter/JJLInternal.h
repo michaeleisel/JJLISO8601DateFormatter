@@ -1,6 +1,7 @@
 //Copyright (c) 2018 Michael Eisel. All rights reserved.
 
 #import <time.h>
+#import "tzfile__.h"
 
 // This C file does the heavy lifting for the libraries. This is to allow maximum portability in the future, in case we want to make a Swift version, a version that can run on Linux, etc.
 

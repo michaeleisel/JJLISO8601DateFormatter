@@ -14,7 +14,11 @@
 		</dict>
 		<dict>
 			<key>FooterText</key>
-			<string>Copyright (c) 2018 michaeleisel &lt;michael.eisel@gmail.com&gt;
+			<string>All files in the tzdb directory are in the public domain
+
+For everything else:
+
+Copyright (c) 2018 michaeleisel &lt;michael.eisel@gmail.com&gt;
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

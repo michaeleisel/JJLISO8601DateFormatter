@@ -1,5 +1,6 @@
 //Copyright (c) 2018 Michael Eisel. All rights reserved.
 
+#import "Vendor/tzdb/tzfile__.h"
 #import <time.h>
 #import <assert.h>
 #import <string.h>
@@ -7,7 +8,6 @@
 #import <pthread.h>
 #import <math.h>
 #import <stdio.h>
-#import "tzfile.h"
 #import <stdlib.h>
 #import <limits.h>
 #import <dispatch/dispatch.h>

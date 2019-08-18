@@ -13,7 +13,7 @@
 #define LOCALTIME_IMPLEMENTATION
 #include "private.h"
 
-#include "tzfile.h"
+#include "tzfile__.h"
 #include <fcntl.h>
 
 #if defined THREAD_SAFE && THREAD_SAFE

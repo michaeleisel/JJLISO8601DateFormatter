@@ -1,9 +1,10 @@
 // Copyright (c) 2018 Michael Eisel. All rights reserved.
 
 #import "JJLISO8601DateFormatter.h"
-#import "tzfile.h"
+#import "Vendor/tzdb/tzfile__.h"
 #import "JJLInternal.h"
 #import <pthread.h>
+#import <Foundation/Foundation.h>
 
 
 #define JJL_ALWAYS_INLINE __attribute__((always_inline))
@@ -33,8 +34,8 @@ static pthread_rwlock_t sDictionaryLock = PTHREAD_RWLOCK_INITIALIZER;
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        sGMTTimeZone = [[NSTimeZone timeZoneWithName:@"GMT"] retain];
-        sNameToTimeZoneValue = [[NSMutableDictionary dictionary] retain];
+        sGMTTimeZone = [NSTimeZone timeZoneWithName:@"GMT"];
+        sNameToTimeZoneValue = [NSMutableDictionary dictionary];
         JJLPerformInitialSetup();
     });
 }
@@ -130,17 +131,11 @@ static timezone_t JJLCTimeZoneForTimeZone(NSTimeZone *timeZone, BOOL alwaysUseNS
 
 - (void)dealloc
 {
-    [super dealloc];
-
-    [_timeZone autorelease];
-    [_fallbackFormatter autorelease];
     pthread_rwlock_destroy(&_timeZoneVarsLock);
 }
 
 - (void)setTimeZone:(NSTimeZone *)timeZone
 {
-    NSTimeZone *oldTimeZone = _timeZone;
-
     pthread_rwlock_wrlock(&_timeZoneVarsLock);
     ({
         _timeZone = timeZone ?: sGMTTimeZone;
@@ -153,9 +148,6 @@ static timezone_t JJLCTimeZoneForTimeZone(NSTimeZone *timeZone, BOOL alwaysUseNS
         }
     });
     pthread_rwlock_unlock(&_timeZoneVarsLock);
-
-    [_timeZone retain];
-    [oldTimeZone autorelease];
 }
 
 BOOL JJLIsValidFormatOptions(NSISO8601DateFormatOptions formatOptions) {
