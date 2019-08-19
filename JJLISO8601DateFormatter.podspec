@@ -24,7 +24,7 @@ Pod::Spec.new do |s|
   s.osx.deployment_target = '10.13'
 
   s.source_files = 'Sources/JJLISO8601DateFormatter/**/*'
-  s.public_header_files = 'Sources/JJLISO8601DateFormatter/JJLISO8601DateFormatter.h'
+  s.public_header_files = 'Sources/JJLISO8601DateFormatter/include/JJLISO8601DateFormatter.h'
 
   # s.requires_arc = false # todo: put back in later
 end

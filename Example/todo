@@ -1,7 +1,0 @@
-test plan: 32-bit simulator devices, real phone, tsan, asan, guard malloc
-figure out if we want to keep that header, "Copyright..." on each file
-mention all the licensees
-get -dealloc working right, check for leaks
-make full test plan: test all supported OSes, test performance, and test unit tests
-todo: NSFormatter subclassing and secure coding!
-"representations with reduced accuracy, e.g. "19" for the year
