@@ -23,6 +23,14 @@
 
 ///////// NOTE (JJLISO8601DateFormatter): this bit is added from Mac OS's tzfile.h for Xcode 10.0. It could change in the future!
 /* Time zone object file directory */
+#ifndef TARGET_OS_SIMULATOR
+#define TARGET_OS_SIMULATOR 0
+#endif
+
+#ifndef TARGET_OS_OSX
+#define TARGET_OS_OSX 0
+#endif
+
 #ifndef TZDIR
 # if TARGET_OS_SIMULATOR || (TARGET_OS_OSX && __MAC_OS_X_VERSION_MIN_REQUIRED < __MAC_10_13)
 #  define TZDIR   "/usr/share/zoneinfo"
