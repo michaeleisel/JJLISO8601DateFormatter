@@ -2,6 +2,7 @@
 
 #define TZFILE_H
 
+#include <sys/types.h>
 #include <time.h>
 
 /*
