@@ -650,7 +650,7 @@ tzloadbody(char const *name, struct state *sp, bool doextend,
 				break;
 			      }
 			    if (! (j < charcnt)) {
-			      int tsabbrlen = (int)strlen(tsabbr);
+			      int tsabbrlen = strlen(tsabbr);
 			      if (j + tsabbrlen < TZ_MAX_CHARS) {
 				strcpy(sp->chars + j, tsabbr);
 				charcnt = j + tsabbrlen + 1;
@@ -1160,7 +1160,7 @@ tzparse(const char *name, struct state *sp, bool lastditch)
 			/*
 			** Two transitions per year, from EPOCH_YEAR forward.
 			*/
-			init_ttinfo(&sp->ttis[0], -dstoffset, true, (int)stdlen + 1);
+			init_ttinfo(&sp->ttis[0], -dstoffset, true, stdlen + 1);
 			init_ttinfo(&sp->ttis[1], -stdoffset, false, 0);
 			sp->defaulttype = 0;
 			timecnt = 0;
@@ -1302,7 +1302,7 @@ tzparse(const char *name, struct state *sp, bool lastditch)
 			** Finally, fill in ttis.
 			*/
 			init_ttinfo(&sp->ttis[0], -stdoffset, false, 0);
-			init_ttinfo(&sp->ttis[1], -dstoffset, true, (int)stdlen + 1);
+			init_ttinfo(&sp->ttis[1], -dstoffset, true, stdlen + 1);
 			sp->typecnt = 2;
 			sp->defaulttype = 0;
 		}
@@ -1313,7 +1313,7 @@ tzparse(const char *name, struct state *sp, bool lastditch)
 		init_ttinfo(&sp->ttis[0], -stdoffset, false, 0);
 		sp->defaulttype = 0;
 	}
-	sp->charcnt = (int)charcnt;
+	sp->charcnt = charcnt;
 	cp = sp->chars;
 	memcpy(cp, stdname, stdlen);
 	cp += stdlen;
@@ -1537,7 +1537,7 @@ localsub(struct state const *sp, time_t const *timep, int_fast32_t setname,
 				else	newy += years;
 				if (! (INT_MIN <= newy && newy <= INT_MAX))
 					return NULL;
-				result->tm_year = (int)newy;
+				result->tm_year = newy;
 			}
 			return result;
 	}
@@ -1706,7 +1706,7 @@ timesub(const time_t *timep, int_fast32_t offset,
 		if (! ((! TYPE_SIGNED(time_t) || INT_MIN <= tdelta)
 		       && tdelta <= INT_MAX))
 		  goto out_of_range;
-		idelta = (int)tdelta;
+		idelta = tdelta;
 		if (idelta == 0)
 			idelta = (tdays < 0) ? -1 : 1;
 		newy = y;
@@ -1721,7 +1721,7 @@ timesub(const time_t *timep, int_fast32_t offset,
 	/*
 	** Given the range, we can now fearlessly cast...
 	*/
-	idays = (int)tdays;
+	idays = tdays;
 	rem += offset - corr;
 	while (rem < 0) {
 		rem += SECSPERDAY;
@@ -2043,7 +2043,7 @@ time2sub(struct tm *const tmp,
 		     It's OK if YOURTM.TM_GMTOFF contains uninitialized data,
 		     since the guess gets checked.  */
 		  time_t altt = t;
-		  int_fast32_t diff = (int)(mytm.TM_GMTOFF - yourtm.TM_GMTOFF);
+		  int_fast32_t diff = mytm.TM_GMTOFF - yourtm.TM_GMTOFF;
 		  if (!increment_overflow_time(&altt, diff)) {
 		    struct tm alttm;
 		    if (funcp(sp, &altt, offset, &alttm)
