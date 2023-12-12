@@ -216,7 +216,7 @@ void JJLFillBufferForDate(char *buffer, double timeInSeconds, CFISO8601DateForma
 static const int32_t kJJLDigits[][10] = {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}, {0, 10, 20, 30, 40, 50, 60, 70, 80, 90}, {0, 100, 200, 300, 400, 500, 600, 700, 800, 900}, {0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000}};
 
 static inline int32_t JJLConsumeNumber(const char **stringPtr, const char *end, int32_t maxLength, bool *errorOccurred) {
-    char *string = *stringPtr;
+    const char *string = *stringPtr;
     int32_t length = 0;
     bool isNegative = false;
     if (unlikely(string < end && *string == '-')) {
