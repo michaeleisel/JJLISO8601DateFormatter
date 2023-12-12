@@ -1,3 +1,6 @@
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wconversion"
+
 /*
 ** This file is in the public domain, so clarified as of
 ** 1996-06-05 by Arthur David Olson.
@@ -2390,3 +2393,5 @@ time(time_t *p)
 }
 
 #endif
+
+#pragma clang diagnostic pop
