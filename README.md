@@ -2,9 +2,16 @@
 
 `JJLISO8601DateFormatter` is a thread-safe, feature complete, drop-in replacement for `NSISO8601DateFormatter` that is 10x or more faster for both conversion to and from dates.
 
+Compared to `NSISO8601DateFormatter`:
+
 - Date to string: **12x+** faster
 - String to date: **10x** faster
 - Object creation: **10x** faster
+
+Compared to newer Swift `Date` conversions ([string to date](https://developer.apple.com/documentation/foundation/date/iso8601formatstyle/3766499-parse) and [date to string](https://developer.apple.com/documentation/foundation/date/3766420-iso8601format)), for newer versions of iOS:
+
+- Date to string: 50% faster
+- String to date: 30% faster
 
 More info on how the benchmark was done is [here](https://github.com/michaeleisel/JJLISO8601DateFormatter#how-is-the-benchmarking-done).
 
