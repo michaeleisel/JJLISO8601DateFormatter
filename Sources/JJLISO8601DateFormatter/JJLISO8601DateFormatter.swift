@@ -17,7 +17,7 @@ public final class JJLISO8601DateFormatter: Formatter {
     private var fallbackFormatter: ISO8601DateFormatter?
     private var _formatOptions: ISO8601DateFormatter.Options
     private var _timeZone: TimeZone
-    private var alwaysUseNSTimeZone: Bool = false
+    var alwaysUseNSTimeZone: Bool = false
     
     public var timeZone: TimeZone {
         get {

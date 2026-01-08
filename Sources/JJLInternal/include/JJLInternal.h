@@ -23,5 +23,11 @@ void JJLFillBufferForDate(char *buffer, double timeInSeconds, CFISO8601DateForma
 double JJLTimeIntervalForString(const char *string, int32_t length, CFISO8601DateFormatOptions options, timezone_t timeZone, _Bool *errorOccurred);
 void JJLPerformInitialSetup(void);
 
+// Testing injection functions for EINTR retry logic
+typedef ssize_t (*JJLReadFunction)(int fd, void *buffer, size_t nbytes);
+typedef int (*JJLOpenFunctionNonVariadic)(const char *path, int mode);
+
+ssize_t JJLSafeReadInjection(int fd, void *buffer, size_t nbytes, JJLReadFunction readPtr);
+int JJLSafeOpenInjectionNonVariadic(const char *path, int mode, JJLOpenFunctionNonVariadic openPtr);
 
 #endif /* JJLInternal_h */
