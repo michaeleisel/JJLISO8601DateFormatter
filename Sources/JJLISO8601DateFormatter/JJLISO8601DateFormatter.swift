@@ -222,11 +222,10 @@ public final class JJLISO8601DateFormatter: Formatter {
         }
         
         var errorOccurred = false
-        let cString = string.utf8CString
-        let interval = cString.withUnsafeBufferPointer { buffer -> TimeInterval in
+        let interval = string.withCString { cString -> TimeInterval in
             return JJLTimeIntervalForString(
-                buffer.baseAddress,
-                Int32(strlen(buffer.baseAddress!)),
+                cString,
+                Int32(strlen(cString)),
                 CFISO8601DateFormatOptions(rawValue: UInt(_formatOptions.rawValue)),
                 cTimeZone,
                 &errorOccurred
