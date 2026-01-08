@@ -252,19 +252,20 @@ public final class JJLISO8601DateFormatter: Formatter {
     ) -> String {
         let time = date.timeIntervalSince1970
         let offset: Double = cTimeZone != nil ? 0 : Double(timeZone.secondsFromGMT(for: date))
-        
-        var buffer = [CChar](repeating: 0, count: Int(kJJLMaxDateLength))
-        buffer.withUnsafeMutableBufferPointer { bufferPtr in
+
+        return withUnsafeTemporaryAllocation(of: CChar.self, capacity: Int(kJJLMaxDateLength)) { buffer in
+            buffer.initialize(repeating: 0)
+            
             JJLFillBufferForDate(
-                bufferPtr.baseAddress,
+                buffer.baseAddress,
                 time,
                 CFISO8601DateFormatOptions(rawValue: UInt(formatOptions.rawValue)),
                 cTimeZone,
                 offset
             )
+            
+            return String(cString: buffer.baseAddress!)
         }
-        
-        return String(cString: buffer)
     }
     
     // MARK: - NSFormatter Override
