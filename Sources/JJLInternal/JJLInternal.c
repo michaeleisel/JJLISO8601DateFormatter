@@ -280,6 +280,45 @@ static inline bool JJLIsLeapYear(int32_t year) {
     return ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0);
 }
 
+// PERF: Fast path - directly compute Unix timestamp without mktime binary search
+// This is used when timezone info is present in the string (UTC or offset)
+static inline int64_t JJLFastMktime(int32_t year, int32_t month, int32_t day, 
+                                     int32_t hour, int32_t min, int32_t sec) {
+    // Days from year 1970 to start of given year
+    static const int32_t kDaysBeforeMonth[] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
+    
+    int32_t y = year - 1970;
+    
+    // Calculate days
+    int64_t days = y * 365;
+    
+    // Add leap years: count leap years from 1970 to year-1
+    if (y > 0) {
+        days += (y + 1) / 4;      // Leap years
+        days -= (y + 69) / 100;   // Subtract century years
+        days += (y + 369) / 400;  // Add 400-year cycles
+    } else if (y < 0) {
+        // For years before 1970
+        days += (y - 2) / 4;
+        days -= (y - 30) / 100;
+        days += (y - 30) / 400;
+    }
+    
+    // Add days for months (0-based month)
+    days += kDaysBeforeMonth[month];
+    
+    // Add leap day if after Feb in a leap year
+    if (month > 1 && JJLIsLeapYear(year)) {
+        days++;
+    }
+    
+    // Add days (1-based day)
+    days += day - 1;
+    
+    // Convert to seconds and add time
+    return days * 86400LL + hour * 3600LL + min * 60LL + sec;
+}
+
 static inline int32_t JJLStartingDayOfWeekForYear(int32_t y) {
     // Sakamoto's method, from https://en.wikipedia.org/wiki/Determination_of_the_day_of_the_week#Implementation-dependent_methods
     int32_t d = 1;
@@ -361,6 +400,7 @@ static inline int32_t JJLConsumeTimeZone(const char **string, const char *end, b
 }
 
 double JJLTimeIntervalForString(const char *string, int32_t length, CFISO8601DateFormatOptions options, timezone_t timeZone, bool *errorOccurred) {
+    // PERF: Check if options has only 0 or 1 bit set (invalid)
     if ((options & (options - 1)) == 0) {
         *errorOccurred = true;
         return 0;
@@ -368,9 +408,7 @@ double JJLTimeIntervalForString(const char *string, int32_t length, CFISO8601Dat
 
     const char *origStringPosition = string;
     const char *end = origStringPosition + length;
-    if ((options & (options - 1)) == 0) {
-        return 0;
-    }
+    // Removed duplicate options check that was here
     struct tm components = {0};
 
     bool showFractionalSeconds = JJLGetShowFractionalSeconds(options);
@@ -469,18 +507,36 @@ double JJLTimeIntervalForString(const char *string, int32_t length, CFISO8601Dat
         }
     }
     if (showTimeZone) {
-        // components.tm_gmtoff = 0;
-        // components.tm_isdst = -1;
-        timeZone = sGMTTimeZone;
-        components.tm_sec -= JJLConsumeTimeZone(&string, end, showColonSeparatorInTimeZone, errorOccurred);
+        // PERF: Fast path - use direct calculation instead of mktime binary search
+        // When timezone is in the string, we know the exact UTC offset
+        int32_t tzOffset = JJLConsumeTimeZone(&string, end, showColonSeparatorInTimeZone, errorOccurred);
+        
+        if (*errorOccurred) {
+            return 0;
+        }
+        
+        // Direct calculation: much faster than jjl_mktime_z's binary search
+        int64_t timestamp = JJLFastMktime(
+            components.tm_year + 1900,
+            components.tm_mon,
+            components.tm_mday,
+            components.tm_hour,
+            components.tm_min,
+            components.tm_sec
+        );
+        
+        // Subtract timezone offset to get UTC
+        timestamp -= tzOffset;
+        
+        return (double)timestamp + millis / 1000.0;
     } else {
         components.tm_isdst = -1; // Let library decide
+        
+        if (*errorOccurred) {
+            return 0;
+        }
+        
+        time_t time = jjl_mktime_z(timeZone, &components);
+        return time + millis / 1000.0;
     }
-
-    if (*errorOccurred) {
-        return 0;
-    }
-
-    time_t time = jjl_mktime_z(timeZone, &components);
-    return time + millis / 1000.0;
 }
