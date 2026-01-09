@@ -5,7 +5,6 @@ import Foundation
 import JJLInternal
 
 /// A high-performance ISO 8601 date formatter that uses C for date processing.
-/// Note that this class is not thread-safe.
 public final class JJLISO8601DateFormatter: Formatter {
     
     private static let gmtTimeZone = TimeZone(identifier: "GMT")!

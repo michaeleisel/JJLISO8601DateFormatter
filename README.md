@@ -74,7 +74,6 @@ It's done by timing many date to string and string to date conversions across tw
 
 Contributors are always welcome. Here are some possible improvements:
 
-- Swift version of the library with no Objective-C code
 - Full rewrite of NSDateFormatter (doable but is it worth it?)
 - Method that returns a `char *` instead of an `NSString` for going from date to string.
 - watchOS and tvOS support
