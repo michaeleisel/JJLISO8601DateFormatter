@@ -1,7 +1,7 @@
 // Copyright (c) 2018 Michael Eisel. All rights reserved.
 
 #import <XCTest/XCTest.h>
-#import <JJLISO8601DateFormatter/JJLISO8601DateFormatter.h>
+@import JJLISO8601DateFormatter;
 
 @interface JJLISO8601DateFormatterTesting : XCTestCase
 
@@ -42,15 +42,7 @@ static const NSInteger kJJLSecondsPerYear = 365 * kJJLSecondsPerDay;
     [super tearDown];
 }
 
-void *jjl_tzalloc(char const *name);
-
-- (void)testTZAlloc
-{
-    void *badTimezone = jjl_tzalloc("America/adf");
-    XCTAssert(badTimezone == NULL);
-    void *goodTimezone = jjl_tzalloc("Africa/Addis_Ababa");
-    XCTAssert(goodTimezone != NULL);
-}
+// Note: jjl_tzalloc test removed - now using std::chrono, no vendored tzdb
 
 - (void)testClassStringFromDate
 {
@@ -294,37 +286,25 @@ static inline bool JJLChangeHasOccurred(int64_t i, int64_t increment, int64_t en
     [timeZones addObject:[NSTimeZone systemTimeZone]];
     [timeZones addObject:[NSTimeZone timeZoneForSecondsFromGMT:0]];
 
-    for (NSNumber *alwaysUseNSTimeZone in @[@NO, @YES]) {
-        [_testFormatter setValue:alwaysUseNSTimeZone forKey:NSStringFromSelector(@selector(alwaysUseNSTimeZone))];
-        NSArray <NSTimeZone *> *timeZonesToTest = nil;
-        if ([alwaysUseNSTimeZone boolValue]) {
-            timeZonesToTest = [timeZones subarrayWithRange:NSMakeRange(0, 10)];
-        } else {
-            timeZonesToTest = timeZones;
-        }
-        for (NSTimeZone *timeZone in timeZonesToTest) {
-            _testFormatter.timeZone = _appleFormatter.timeZone = timeZone;
-            int32_t increment = kJJLSecondsPerDay * 23 + kJJLSecondsPerHour * 7 + kJJLSecondsPerMinute * 5 + 7.513;
-            [self _testDatesInParallelWithStartInterval:0 endInterval:50 * kJJLSecondsPerYear increment:increment];
-            // Don't use a fixed seed for the random numbers, trade consistency for greater test coverage
-            [self _testBlockInParallelWithStart:0 end:1e3 increment:1 block:^(NSTimeInterval unused) {
-                NSTimeInterval interval = arc4random_uniform(70 * kJJLSecondsPerYear);
-                NSDate *date = [NSDate dateWithTimeIntervalSince1970:interval];
-                JJLTestStringFromDate(date, self->_appleFormatter, self->_testFormatter);
-            }];
-        }
+    for (NSTimeZone *timeZone in timeZones) {
+        _testFormatter.timeZone = _appleFormatter.timeZone = timeZone;
+        int32_t increment = kJJLSecondsPerDay * 23 + kJJLSecondsPerHour * 7 + kJJLSecondsPerMinute * 5 + 7.513;
+        [self _testDatesInParallelWithStartInterval:0 endInterval:50 * kJJLSecondsPerYear increment:increment];
+        // Don't use a fixed seed for the random numbers, trade consistency for greater test coverage
+        [self _testBlockInParallelWithStart:0 end:1e3 increment:1 block:^(NSTimeInterval unused) {
+            NSTimeInterval interval = arc4random_uniform(70 * kJJLSecondsPerYear);
+            NSDate *date = [NSDate dateWithTimeIntervalSince1970:interval];
+            JJLTestStringFromDate(date, self->_appleFormatter, self->_testFormatter);
+        }];
     }
 }
 
 - (void)testLeapForward
 {
     // Use Brazil, which does a leap forward, and just cover the whole year to be safe
-    for (NSNumber *alwaysUseNSTimeZone in @[@YES, @NO]) {
-        [_testFormatter setValue:alwaysUseNSTimeZone forKey:NSStringFromSelector(@selector(alwaysUseNSTimeZone))];
-        NSTimeInterval start = [_appleFormatter dateFromString:@"2017-01-01T12:00:00.000Z"].timeIntervalSince1970;
-        _testFormatter.timeZone = _appleFormatter.timeZone = _brazilTimeZone;
-        [self _testDatesInParallelWithStartInterval:start endInterval:start + kJJLSecondsPerYear + 10 * kJJLSecondsPerDay increment:17 * kJJLSecondsPerMinute];
-    }
+    NSTimeInterval start = [_appleFormatter dateFromString:@"2017-01-01T12:00:00.000Z"].timeIntervalSince1970;
+    _testFormatter.timeZone = _appleFormatter.timeZone = _brazilTimeZone;
+    [self _testDatesInParallelWithStartInterval:start endInterval:start + kJJLSecondsPerYear + 10 * kJJLSecondsPerDay increment:17 * kJJLSecondsPerMinute];
 }
 
 - (void)testFormattingAcrossTimes
