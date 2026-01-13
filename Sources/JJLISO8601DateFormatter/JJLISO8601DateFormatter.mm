@@ -9,8 +9,6 @@
 
 #define JJL_ALWAYS_INLINE __attribute__((always_inline))
 
-// Note: this class does not use ARC
-
 @interface JJLISO8601DateFormatter ()
 
 @property (nonatomic) BOOL alwaysUseNSTimeZone;
@@ -123,7 +121,7 @@ static timezone_t JJLCTimeZoneForTimeZone(NSTimeZone *timeZone, BOOL alwaysUseNS
         });
         pthread_rwlock_unlock(&sDictionaryLock);
     } else {
-        cTimeZone = [timeZoneValue pointerValue];
+        cTimeZone = static_cast<timezone_t>([timeZoneValue pointerValue]);
     }
 
     return cTimeZone;
@@ -150,7 +148,7 @@ static timezone_t JJLCTimeZoneForTimeZone(NSTimeZone *timeZone, BOOL alwaysUseNS
     pthread_rwlock_unlock(&_timeZoneVarsLock);
 }
 
-BOOL JJLIsValidFormatOptions(NSISO8601DateFormatOptions formatOptions) {
+extern "C" BOOL JJLIsValidFormatOptions(NSISO8601DateFormatOptions formatOptions) {
     NSISO8601DateFormatOptions mask = NSISO8601DateFormatWithYear | NSISO8601DateFormatWithMonth | NSISO8601DateFormatWithWeekOfYear | NSISO8601DateFormatWithDay | NSISO8601DateFormatWithTime | NSISO8601DateFormatWithTimeZone | NSISO8601DateFormatWithSpaceBetweenDateAndTime | NSISO8601DateFormatWithDashSeparatorInDate | NSISO8601DateFormatWithColonSeparatorInTime | NSISO8601DateFormatWithColonSeparatorInTimeZone |  NSISO8601DateFormatWithFullDate | NSISO8601DateFormatWithFullTime | NSISO8601DateFormatWithInternetDateTime;
     if (@available(iOS 11.0, *)) {
         mask |= NSISO8601DateFormatWithFractionalSeconds;
@@ -206,10 +204,27 @@ static inline NSString *JJLStringFromDate(NSDate *date, NSISO8601DateFormatOptio
     NSString *string = nil;
     double time = date.timeIntervalSince1970;
     double offset = cTimeZone ? 0 : [timeZone secondsFromGMTForDate:date];
+    
+    // Apple rounds GMT-prefixed timezones to the nearest minute
+    if (!cTimeZone && [timeZone.name hasPrefix:@"GMT"]) {
+        NSInteger offsetSeconds = (NSInteger)offset;
+        NSInteger remainder = offsetSeconds % 60;
+        if (remainder != 0) {
+            // Round to nearest minute
+            if (remainder >= 30) {
+                offset = offsetSeconds + (60 - remainder);
+            } else if (remainder <= -30) {
+                offset = offsetSeconds - (60 + remainder);
+            } else {
+                offset = offsetSeconds - remainder;
+            }
+        }
+    }
+    
     char buffer[kJJLMaxDateLength] = {0};
     char *bufferPtr = (char *)buffer;
     JJLFillBufferForDate(bufferPtr, time, (CFISO8601DateFormatOptions)formatOptions, cTimeZone, offset);
-    string = CFAutorelease(CFStringCreateWithCString(kCFAllocatorDefault, buffer, kCFStringEncodingUTF8));
+    string = (__bridge_transfer NSString *)CFStringCreateWithCString(kCFAllocatorDefault, buffer, kCFStringEncodingUTF8);
     return string;
 }
 

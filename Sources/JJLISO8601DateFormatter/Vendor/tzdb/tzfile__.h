@@ -41,11 +41,20 @@
 #endif
 
 typedef struct state *timezone_t;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct state *jjl_tzalloc(char const *name);
 void jjl_tzfree(struct state *sp);
 struct tm * jjl_localtime_rz(struct state *sp, time_t const *timep, struct tm *tmp);
 time_t jjl_mktime_z(struct state *sp, struct tm *tmp);
 ssize_t jjl_saferead(int fd, void *buffer, size_t nbytes);
+
+#ifdef __cplusplus
+}
+#endif
 
 #ifndef TZDEFAULT
 #define TZDEFAULT	"/etc/localtime"

@@ -1,7 +1,7 @@
 // Copyright (c) 2018 Michael Eisel. All rights reserved.
 
-#import <XCTest/XCTest.h>
-#import <JJLISO8601DateFormatter/JJLISO8601DateFormatter.h>
+@import XCTest;
+@import JJLISO8601DateFormatter;
 
 @interface JJLISO8601DateFormatterTesting : XCTestCase
 
