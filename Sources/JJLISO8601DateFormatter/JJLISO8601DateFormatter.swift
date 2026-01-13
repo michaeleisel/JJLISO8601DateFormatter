@@ -249,8 +249,27 @@ public final class JJLISO8601DateFormatter: Formatter {
         timeZone: TimeZone
     ) -> String {
         let time = date.timeIntervalSince1970
-        let offset: Double = cTimeZone != nil ? 0 : Double(timeZone.secondsFromGMT(for: date))
-
+        // When using fallback (cTimeZone is nil), we need to determine if this is a
+        // synthetic GMT offset timezone (like TimeZone(secondsFromGMT:)) or a real
+        // historical timezone. Synthetic timezones have identifiers like "GMT+0800"
+        // and should be truncated to minute precision to match Apple's behavior.
+        // Real timezones (like Africa/Monrovia) can have second-precision offsets.
+        let offset: Double
+        if cTimeZone != nil {
+            offset = 0
+        } else {
+            let rawOffset = timeZone.secondsFromGMT(for: date)
+            // Check if this is a synthetic GMT offset timezone by examining the identifier
+            // Synthetic timezones have identifiers like "GMT+0800" or "GMT-0530"
+            let identifier = timeZone.identifier
+            if identifier.hasPrefix("GMT+") || identifier.hasPrefix("GMT-") {
+                // Truncate to minute precision for synthetic GMT offset timezones
+                offset = Double((rawOffset / 60) * 60)
+            } else {
+                // Real timezone - preserve full precision including seconds
+                offset = Double(rawOffset)
+            }
+        }
         return withUnsafeTemporaryAllocation(of: CChar.self, capacity: Int(kJJLMaxDateLength)) { buffer in
             buffer.initialize(repeating: 0)
             
