@@ -63,7 +63,12 @@ static inline void JJLPushNumber(char **string, int32_t num, int32_t fixedDigitL
 static inline void JJLFillBufferWithFractionalSeconds(double time, char **string) {
     double unused = 0;
     double fractionalComponent = modf(time, &unused);
+    // Handle negative fractional component for dates before 1970
+    if (fractionalComponent < 0) {
+        fractionalComponent += 1.0;
+    }
     int32_t millis = (int32_t)lround(fractionalComponent * 1000);
+    if (millis == 1000) millis = 999; // Avoid overflow from rounding
     JJLPushNumber(string, millis, 3);
 }
 

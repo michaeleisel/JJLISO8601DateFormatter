@@ -9,8 +9,6 @@
 
 #define JJL_ALWAYS_INLINE __attribute__((always_inline))
 
-// Note: this class does not use ARC
-
 @interface JJLISO8601DateFormatter ()
 
 @property (nonatomic) BOOL alwaysUseNSTimeZone;
@@ -206,6 +204,23 @@ static inline NSString *JJLStringFromDate(NSDate *date, NSISO8601DateFormatOptio
     NSString *string = nil;
     double time = date.timeIntervalSince1970;
     double offset = cTimeZone ? 0 : [timeZone secondsFromGMTForDate:date];
+    
+    // Apple rounds GMT-prefixed timezones to the nearest minute
+    if (!cTimeZone && [timeZone.name hasPrefix:@"GMT"]) {
+        NSInteger offsetSeconds = (NSInteger)offset;
+        NSInteger remainder = offsetSeconds % 60;
+        if (remainder != 0) {
+            // Round to nearest minute
+            if (remainder >= 30) {
+                offset = offsetSeconds + (60 - remainder);
+            } else if (remainder <= -30) {
+                offset = offsetSeconds - (60 + remainder);
+            } else {
+                offset = offsetSeconds - remainder;
+            }
+        }
+    }
+    
     char buffer[kJJLMaxDateLength] = {0};
     char *bufferPtr = (char *)buffer;
     JJLFillBufferForDate(bufferPtr, time, (CFISO8601DateFormatOptions)formatOptions, cTimeZone, offset);
