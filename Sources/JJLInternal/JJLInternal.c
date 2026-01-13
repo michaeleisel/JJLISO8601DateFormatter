@@ -12,7 +12,7 @@
 #import <limits.h>
 #import <dispatch/dispatch.h>
 
-#import "JJLInternal.h"
+#import "include/JJLInternal.h"
 
 static bool sIsIOS11OrHigher = false;
 static timezone_t sGMTTimeZone = NULL;

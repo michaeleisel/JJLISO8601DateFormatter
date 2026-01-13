@@ -414,8 +414,8 @@ int JJLSafeOpen(const char *path, int mode) {
 
 bool JJLGoodVersion(const char *name) {
     int fd = JJLSafeOpen(name, OPEN_MODE);
-    char header[5];
-    JJLSafeRead(fd, header, sizeof(header));
+    char header[6] = {};
+    JJLSafeRead(fd, header, sizeof(header) - 1);
     close(fd);
     return memcmp(header, "TZif", 4) == 0 && (header[4] == '2' || header[4] == '1' || header[4] == '\0');
 }
