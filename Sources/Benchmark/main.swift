@@ -65,9 +65,10 @@ func dateFromStringBenchmark() {
         jjlFormatter.formatOptions.insert(.withFractionalSeconds)
         jjlFormatter.timeZone = timeZone ?? TimeZone(secondsFromGMT: 0)!
         
-        let appleFormatter = ISO8601DateFormatter()
+        ISO8601FormatStyle()
+        /*let appleFormatter = ISO8601DateFormatter()
         appleFormatter.formatOptions.insert(.withFractionalSeconds)
-        appleFormatter.timeZone = timeZone
+        appleFormatter.timeZone = timeZone*/
         
         let dateString = "2018-09-13T19:56:48.981Z"
         let tzName = timeZone?.identifier ?? "nil"
@@ -159,7 +160,7 @@ print("JJLISO8601DateFormatter Benchmark")
 print("==================================\n")
 
 dateFromStringBenchmark()
-stringFromDateBenchmark()
-formatStyleBenchmark()
+//stringFromDateBenchmark()
+//formatStyleBenchmark()
 
 print("\n✓ All benchmarks completed successfully")
