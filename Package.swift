@@ -1,10 +1,14 @@
-// swift-tools-version:5.0
+// swift-tools-version:5.9
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "JJLISO8601DateFormatter",
+    platforms: [
+        .macOS(.v13),
+        .iOS(.v16),
+    ],
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .library(
@@ -29,6 +33,12 @@ let package = Package(
             dependencies: ["JJLInternal"]),
         .testTarget(
             name: "JJLISO8601DateFormatterTests",
+            dependencies: ["JJLISO8601DateFormatter"]),
+        .testTarget(
+            name: "JJLISO8601DateFormatterSwiftBenchTests",
+            dependencies: ["JJLISO8601DateFormatter"]),
+        .executableTarget(
+            name: "Benchmark",
             dependencies: ["JJLISO8601DateFormatter"]),
     ]
 )
