@@ -31,6 +31,11 @@ private func isInDebug() -> Bool {
     #endif
 }
 
+@inline(never)
+@_optimize(none)
+public func blackHole<T>(_ value: T) {
+}
+
 private func benchmark(_ name: String, test: (() -> Bool)? = nil, block: () -> Void) {
     if isInDebug() {
         print("WARNING: in debug mode")
@@ -38,7 +43,7 @@ private func benchmark(_ name: String, test: (() -> Bool)? = nil, block: () -> V
     if let test = test {
         hardAssert(test(), "Test failed for benchmark: \(name)")
     }
-    block()
+    blackHole(block())
     
     var totalElapsed = 0.0
     var runs: UInt64 = 0
@@ -47,7 +52,7 @@ private func benchmark(_ name: String, test: (() -> Bool)? = nil, block: () -> V
     while totalElapsed < targetSeconds {
         let start = currentTime()
         autoreleasepool {
-            block()
+            blackHole(block())
         }
         let end = currentTime()
         
@@ -76,6 +81,7 @@ func parseWithOffsetsBenchmark() {
     jjlFormatter.formatOptions.insert(.withFractionalSeconds)
     
     let parseStrategy = Date.ISO8601FormatStyle(includingFractionalSeconds: true).parseStrategy
+    var sum = 0.0
     
     for (dateString, label) in dateStrings {
         benchmark("JJL parse [\(label)]", test: {
@@ -85,16 +91,21 @@ func parseWithOffsetsBenchmark() {
             return jjlDate == appleDate
         }) {
             for _ in 0..<1000 {
-                _ = jjlFormatter.date(from: dateString)
+                let date = jjlFormatter.date(from: dateString)!
+                blackHole(date)
+                sum += date.timeIntervalSince1970
             }
         }
         
         benchmark("Apple parse [\(label)]") {
             for _ in 0..<1000 {
-                _ = try? Date(dateString, strategy: parseStrategy)
+                let date = try! Date(dateString, strategy: parseStrategy)
+                blackHole(date)
+                sum += date.timeIntervalSince1970
             }
         }
     }
+    print(sum)
 }
 
 func stringFromDateBenchmark() {
