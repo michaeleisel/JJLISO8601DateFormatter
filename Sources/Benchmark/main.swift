@@ -23,7 +23,18 @@ private func currentTime() -> Double {
 
 // MARK: - Benchmark
 
+private func isInDebug() -> Bool {
+    #if DEBUG
+    return true
+    #else
+    return false
+    #endif
+}
+
 private func benchmark(_ name: String, test: (() -> Bool)? = nil, block: () -> Void) {
+    if isInDebug() {
+        print("WARNING: in debug mode")
+    }
     if let test = test {
         hardAssert(test(), "Test failed for benchmark: \(name)")
     }
@@ -54,38 +65,39 @@ private func benchmark(_ name: String, test: (() -> Bool)? = nil, block: () -> V
 func dateFromStringBenchmark() {
     print("=== dateFromString Benchmark ===")
     
-    for timeZone: TimeZone? in [
-        nil,
+    let dateString = "2018-09-13T19:56:48.981"
+    
+    let timeZones: [TimeZone] = [
         TimeZone(secondsFromGMT: 0)!,
-        TimeZone(secondsFromGMT: 1)!,
-        TimeZone(identifier: "UTC")!,
-        TimeZone(identifier: "America/Sao_Paulo")!
-    ] {
+        TimeZone(identifier: "America/Sao_Paulo")!,
+        TimeZone(identifier: "Asia/Tokyo")!,
+    ]
+    
+    for timeZone in timeZones {
         let jjlFormatter = JJLISO8601DateFormatter()
         jjlFormatter.formatOptions.insert(.withFractionalSeconds)
-        jjlFormatter.timeZone = timeZone ?? TimeZone(secondsFromGMT: 0)!
+        jjlFormatter.timeZone = timeZone
         
-        ISO8601FormatStyle()
-        /*let appleFormatter = ISO8601DateFormatter()
-        appleFormatter.formatOptions.insert(.withFractionalSeconds)
-        appleFormatter.timeZone = timeZone*/
+        let parseStrategy = Date.ISO8601FormatStyle(includingFractionalSeconds: true, timeZone: timeZone)
+            .parseStrategy
         
-        let dateString = "2018-09-13T19:56:48.981Z"
-        let tzName = timeZone?.identifier ?? "nil"
+        let tzName = timeZone.identifier
         
         benchmark("JJL dateFromString [\(tzName)]", test: {
-            return jjlFormatter.date(from: dateString) == appleFormatter.date(from: dateString)
+            let jjlDate = jjlFormatter.date(from: dateString)
+            let appleDate = try? Date(dateString, strategy: parseStrategy)
+            return jjlDate == appleDate
         }) {
             for _ in 0..<1000 {
                 _ = jjlFormatter.date(from: dateString)
             }
         }
 
-        benchmark("Apple dateFromString [\(tzName)]") {
+        /*benchmark("ISO8601FormatStyle parse [\(tzName)]") {
             for _ in 0..<1000 {
-                _ = appleFormatter.date(from: dateString)
+                _ = try? Date(dateString, strategy: parseStrategy)
             }
-        }
+        }*/
     }
 }
 
