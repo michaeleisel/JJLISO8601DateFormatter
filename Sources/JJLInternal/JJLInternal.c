@@ -365,6 +365,45 @@ static inline int32_t JJLConsumeTimeZone(const char **string, const char *end, b
     }
 }
 
+// PERF: Fast path - directly compute Unix timestamp without mktime binary search
+// This is used when timezone info is present in the string (UTC or offset)
+// Returns seconds since 1970-01-01 00:00:00 UTC
+static inline int64_t JJLFastMktime(int32_t year, int32_t month, int32_t day, int32_t hour, int32_t min, int32_t sec) {
+    // Days from year 1970 to start of given year
+    static const int32_t kDaysBeforeMonth[] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
+
+    int32_t y = year - 1970;
+
+    // Calculate days
+    int64_t days = y * 365;
+
+    // Add leap years: count leap years from 1970 to year-1
+    if (y > 0) {
+        days += (y + 1) / 4;      // Leap years
+        days -= (y + 69) / 100;   // Subtract century years
+        days += (y + 369) / 400;  // Add 400-year cycles
+    } else if (y < 0) {
+        // For years before 1970
+        days += (y - 2) / 4;
+        days -= (y - 30) / 100;
+        days += (y - 30) / 400;
+    }
+
+    // Add days for months (0-based month)
+    days += kDaysBeforeMonth[month];
+
+    // Add leap day if after Feb in a leap year
+    if (month > 1 && JJLIsLeapYear(year)) {
+        days++;
+    }
+
+    // Add days (1-based day)
+    days += day - 1;
+
+    // Convert to seconds and add time
+    return days * 86400LL + hour * 3600LL + min * 60LL + sec;
+}
+
 double JJLTimeIntervalForString(const char *string, int32_t length, CFISO8601DateFormatOptions options, timezone_t timeZone, bool *errorOccurred) {
     if ((options & (options - 1)) == 0) {
         *errorOccurred = true;
@@ -474,10 +513,31 @@ double JJLTimeIntervalForString(const char *string, int32_t length, CFISO8601Dat
         }
     }
     if (showTimeZone) {
-        // components.tm_gmtoff = 0;
-        // components.tm_isdst = -1;
-        timeZone = sGMTTimeZone;
-        components.tm_sec -= JJLConsumeTimeZone(&string, end, showColonSeparatorInTimeZone, errorOccurred);
+        // PERF: Fast path - use direct calculation instead of mktime binary search
+        // When timezone is in the string, we know the exact UTC offset
+        // JJLConsumeTimeZone returns offset in SECONDS
+        int32_t tzOffset = JJLConsumeTimeZone(&string, end, showColonSeparatorInTimeZone, errorOccurred);
+
+        if (*errorOccurred) {
+            return 0;
+        }
+
+        // Direct calculation: much faster than jjl_mktime_z's binary search
+        // timestamp is in SECONDS from 1970 UTC
+        int64_t timestamp = JJLFastMktime(
+            components.tm_year + 1900,
+            components.tm_mon,
+            components.tm_mday,
+            components.tm_hour,
+            components.tm_min,
+            components.tm_sec
+        );
+
+        // Subtract timezone offset to get UTC
+        // Both timestamp and tzOffset are in SECONDS
+        timestamp -= tzOffset;
+
+        return (double)timestamp + millis / 1000.0;
     } else {
         components.tm_isdst = -1; // Let library decide
     }
