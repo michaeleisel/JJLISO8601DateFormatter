@@ -410,29 +410,46 @@ public func jjlFillBuffer(
     }
 }
 
-// MARK: - UTF8 Buffer Parser (zero-copy, O(1) access)
+// MARK: - UTF8 Iterator Parser (using .utf8 iterator directly)
 
-private struct JJLBufferParser {
-    private let buffer: UnsafeBufferPointer<UInt8>
-    private var pos: Int = 0
+private struct JJLUTF8Parser {
+    private var iterator: String.UTF8View.Iterator
+    private var current: UInt8?
+    private var hasPeeked: Bool = false
     var errorOccurred: Bool = false
     
-    init(_ buffer: UnsafeBufferPointer<UInt8>) {
-        self.buffer = buffer
+    init(_ utf8: String.UTF8View) {
+        self.iterator = utf8.makeIterator()
     }
     
     @inline(__always)
-    var isAtEnd: Bool { pos >= buffer.count }
+    var isAtEnd: Bool {
+        mutating get {
+            if !hasPeeked {
+                current = iterator.next()
+                hasPeeked = true
+            }
+            return current == nil
+        }
+    }
     
     @inline(__always)
     mutating func peek() -> UInt8? {
-        guard pos < buffer.count else { return nil }
-        return buffer[pos]
+        if !hasPeeked {
+            current = iterator.next()
+            hasPeeked = true
+        }
+        return current
     }
     
     @inline(__always)
     mutating func advance() {
-        pos += 1
+        if hasPeeked {
+            hasPeeked = false
+            current = nil
+        } else {
+            _ = iterator.next()
+        }
     }
     
     @inline(__always)
@@ -440,18 +457,17 @@ private struct JJLBufferParser {
         var length: Int32 = 0
         var isNegative = false
         
-        if pos < buffer.count && buffer[pos] == 0x2D {  // '-'
+        if let c = peek(), c == 0x2D {  // '-'
             isNegative = true
-            pos += 1
+            advance()
         }
         
         var result: Int32 = 0
-        while pos < buffer.count && (maxLength == -1 || length < maxLength) {
-            let c = buffer[pos]
-            guard c >= 0x30 && c <= 0x39 else { break }  // '0'-'9'
+        while !isAtEnd && (maxLength == -1 || length < maxLength) {
+            guard let c = peek(), c >= 0x30 && c <= 0x39 else { break }  // '0'-'9'
             result = result * 10 + Int32(c - 0x30)
             length += 1
-            pos += 1
+            advance()
         }
         
         if length == 0 {
@@ -464,37 +480,35 @@ private struct JJLBufferParser {
     
     @inline(__always)
     mutating func consumeCharacter(_ expected: UInt8) {
-        guard pos < buffer.count && buffer[pos] == expected else {
+        guard let c = peek(), c == expected else {
             errorOccurred = true
             return
         }
-        pos += 1
+        advance()
     }
     
     @inline(__always)
     mutating func consumeSeparator() {
-        guard pos < buffer.count else {
+        guard let c = peek() else {
             errorOccurred = true
             return
         }
-        let c = buffer[pos]
         if c != 0x20 && c != 0x2D && c != 0x3A {  // ' ', '-', ':'
             errorOccurred = true
             return
         }
-        pos += 1
+        advance()
     }
     
     @inline(__always)
     mutating func consumeFractionalSeconds() -> Int32 {
-        guard pos < buffer.count else {
+        guard let c = peek() else {
             errorOccurred = true
             return 0
         }
         
-        let c = buffer[pos]
         if c == 0x2E || c == 0x2C {  // '.' or ','
-            pos += 1
+            advance()
         } else {
             errorOccurred = true
             return 0
@@ -504,19 +518,17 @@ private struct JJLBufferParser {
         var length: Int32 = 0
         
         // Read up to 3 significant digits
-        while pos < buffer.count && length < 3 {
-            let c = buffer[pos]
-            guard c >= 0x30 && c <= 0x39 else { break }
+        while !isAtEnd && length < 3 {
+            guard let c = peek(), c >= 0x30 && c <= 0x39 else { break }
             num = num * 10 + Int32(c - 0x30)
             length += 1
-            pos += 1
+            advance()
         }
         
         // Consume any leftover decimal digits
-        while pos < buffer.count {
-            let c = buffer[pos]
-            guard c >= 0x30 && c <= 0x39 else { break }
-            pos += 1
+        while !isAtEnd {
+            guard let c = peek(), c >= 0x30 && c <= 0x39 else { break }
+            advance()
         }
         
         if length == 0 {
@@ -532,19 +544,18 @@ private struct JJLBufferParser {
     
     @inline(__always)
     mutating func consumeTimeZone(separator: Bool) -> Int32 {
-        guard pos < buffer.count else {
+        guard let c = peek() else {
             errorOccurred = true
             return 0
         }
         
-        let c = buffer[pos]
         if c == 0x5A {  // 'Z'
-            pos += 1
+            advance()
             return 0
         }
         
         let isNegative = c == 0x2D  // '-'
-        pos += 1
+        advance()
         
         let hours = consumeNumber(maxLength: 2)
         if separator {
@@ -553,13 +564,13 @@ private struct JJLBufferParser {
         let minutes = consumeNumber(maxLength: 2)
         
         var seconds: Int32 = 0
-        if pos < buffer.count {
+        if !isAtEnd {
             if separator {
-                if buffer[pos] == 0x3A {  // ':'
+                if let c = peek(), c == 0x3A {  // ':'
                     consumeCharacter(0x3A)
                     seconds = consumeNumber(maxLength: 2)
                 }
-            } else if buffer[pos] >= 0x30 && buffer[pos] <= 0x39 {
+            } else if let c = peek(), c >= 0x30 && c <= 0x39 {
                 seconds = consumeNumber(maxLength: 2)
             }
         }
@@ -612,20 +623,17 @@ public func jjlTimeIntervalForString(
         return (0, false)
     }
     
-    // Use withUTF8 for zero-copy O(1) byte access
-    var str = string
-    return str.withUTF8 { buffer in
-        parseWithBuffer(buffer, options: options, timeZone: timeZone)
-    }
+    // Use .utf8 iterator directly
+    var parser = JJLUTF8Parser(string.utf8)
+    return parseWithIterator(&parser, options: options, timeZone: timeZone)
 }
 
 @inline(__always)
-private func parseWithBuffer(
-    _ buffer: UnsafeBufferPointer<UInt8>,
+private func parseWithIterator(
+    _ parser: inout JJLUTF8Parser,
     options: JJLFormatOptions,
     timeZone: JJLTimeZone?
 ) -> (interval: Double, success: Bool) {
-    var parser = JJLBufferParser(buffer)
     var components = JJLTimeComponents()
     
     let showFractionalSeconds = options.contains(.withFractionalSeconds)
