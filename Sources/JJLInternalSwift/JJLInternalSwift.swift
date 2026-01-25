@@ -52,63 +52,85 @@ public struct JJLTimeComponents {
     public init() {}
 }
 
-// MARK: - Date Formatter Buffer
+// MARK: - Date Formatter Buffer (using UInt8 array for speed)
 
 public struct JJLDateBuffer {
-    public var buffer: String
+    private var bytes: [UInt8]
+    private var position: Int = 0
     
     public init() {
-        buffer = ""
-        buffer.reserveCapacity(Int(kJJLMaxDateLength))
+        bytes = [UInt8](repeating: 0, count: Int(kJJLMaxDateLength))
     }
     
     @inline(__always)
-    public mutating func append(_ char: Character) {
-        buffer.append(char)
+    public mutating func append(_ char: UInt8) {
+        bytes[position] = char
+        position += 1
     }
     
     @inline(__always)
-    public mutating func append(_ string: String) {
-        buffer.append(string)
+    public mutating func append(_ chars: UnsafeBufferPointer<UInt8>) {
+        for i in 0..<chars.count {
+            bytes[position + i] = chars[i]
+        }
+        position += chars.count
+    }
+    
+    @inline(__always)
+    public mutating func appendASCII(_ char: Character) {
+        bytes[position] = char.asciiValue!
+        position += 1
     }
     
     public mutating func clear() {
-        buffer.removeAll(keepingCapacity: true)
+        position = 0
+    }
+    
+    public func toString() -> String {
+        return String(decoding: bytes[0..<position], as: UTF8.self)
     }
 }
 
-// MARK: - Precomputed Integer-to-String Lookup Table
+// MARK: - Precomputed Integer-to-String Lookup Table (using bytes)
 
 private struct ItoaTable {
-    // Each entry is a 4-character string like "0000", "0001", etc.
-    private var strings: [String]
+    // Each entry is 4 bytes like [0x30, 0x30, 0x30, 0x30] for "0000"
+    private var table: [UInt8]  // Flat array: index * 4 gives start
     
     init() {
-        strings = []
-        strings.reserveCapacity(kItoaStringsLength)
+        table = [UInt8](repeating: 0x30, count: kItoaStringsLength * kItoaEachStringLength)  // Fill with '0'
         
         for i in 0..<kItoaStringsLength {
-            var s = String(i)
-            while s.count < kItoaEachStringLength {
-                s = "0" + s
+            var num = i
+            var digit = kItoaEachStringLength - 1
+            while num > 0 {
+                table[i * kItoaEachStringLength + digit] = UInt8(0x30 + num % 10)
+                num /= 10
+                digit -= 1
             }
-            strings.append(s)
         }
     }
     
     @inline(__always)
-    func string(for num: Int32, digits: Int32) -> String {
+    func appendNumber(_ num: Int32, digits: Int, to buffer: inout JJLDateBuffer) {
         if num >= 0 && num < Int32(kItoaStringsLength) {
-            let s = strings[Int(num)]
-            let startIndex = s.index(s.endIndex, offsetBy: -Int(digits))
-            return String(s[startIndex...])
+            let start = Int(num) * kItoaEachStringLength + (kItoaEachStringLength - digits)
+            for i in 0..<digits {
+                buffer.append(table[start + i])
+            }
         } else {
             // Slow path for large numbers
-            var s = String(num)
-            while s.count < Int(digits) {
-                s = "0" + s
+            var temp = [UInt8](repeating: 0x30, count: digits)
+            var n = num
+            var idx = digits - 1
+            while n > 0 && idx >= 0 {
+                temp[idx] = UInt8(0x30 + n % 10)
+                n /= 10
+                idx -= 1
             }
-            return s
+            for byte in temp {
+                buffer.append(byte)
+            }
         }
     }
 }
@@ -280,21 +302,21 @@ public func jjlFillBuffer(
         } else if useNextYear {
             yearToShow += 1
         }
-        buffer.append(itoaTable.string(for: yearToShow, digits: 4))
+        itoaTable.appendNumber(yearToShow, digits: 4, to: &buffer)
     }
     
     if showMonth {
         if showDateSeparator && showYear {
-            buffer.append("-")
+            buffer.append(0x2D)  // '-'
         }
-        buffer.append(itoaTable.string(for: components.month + 1, digits: 2))
+        itoaTable.appendNumber(components.month + 1, digits: 2, to: &buffer)
     }
     
     if showWeekOfYear {
         if showDateSeparator && (showYear || showMonth) {
-            buffer.append("-")
+            buffer.append(0x2D)  // '-'
         }
-        buffer.append("W")
+        buffer.append(0x57)  // 'W'
         
         var week: Int32 = 0
         if useNextYear {
@@ -309,19 +331,19 @@ public func jjlFillBuffer(
                 week += 1
             }
         }
-        buffer.append(itoaTable.string(for: week + 1, digits: 2))
+        itoaTable.appendNumber(week + 1, digits: 2, to: &buffer)
     }
     
     if showDay {
         if showDateSeparator && (showYear || showMonth || showWeekOfYear) {
-            buffer.append("-")
+            buffer.append(0x2D)  // '-'
         }
         if showWeekOfYear {
-            buffer.append(itoaTable.string(for: daysAfterFirstWeekday + 1, digits: 2))
+            itoaTable.appendNumber(daysAfterFirstWeekday + 1, digits: 2, to: &buffer)
         } else if showMonth {
-            buffer.append(itoaTable.string(for: components.day, digits: 2))
+            itoaTable.appendNumber(components.day, digits: 2, to: &buffer)
         } else {
-            buffer.append(itoaTable.string(for: components.yearDay + 1, digits: 3))
+            itoaTable.appendNumber(components.yearDay + 1, digits: 3, to: &buffer)
         }
     }
     
@@ -331,39 +353,39 @@ public func jjlFillBuffer(
     
     if showTime {
         if showDate {
-            buffer.append(timeSeparatorIsSpace ? " " : "T")
+            buffer.append(timeSeparatorIsSpace ? 0x20 : 0x54)  // ' ' or 'T'
         }
-        buffer.append(itoaTable.string(for: components.hour, digits: 2))
+        itoaTable.appendNumber(components.hour, digits: 2, to: &buffer)
         if showTimeSeparator {
-            buffer.append(":")
+            buffer.append(0x3A)  // ':'
         }
-        buffer.append(itoaTable.string(for: components.minute, digits: 2))
+        itoaTable.appendNumber(components.minute, digits: 2, to: &buffer)
         if showTimeSeparator {
-            buffer.append(":")
+            buffer.append(0x3A)  // ':'
         }
-        buffer.append(itoaTable.string(for: components.second, digits: 2))
+        itoaTable.appendNumber(components.second, digits: 2, to: &buffer)
         
         if showFractionalSeconds {
-            buffer.append(".")
+            buffer.append(0x2E)  // '.'
             
             // Use pre-computed fractional component
             var millis = Int32((fractionalComponent * 1000).rounded())
             if millis == 1000 { millis = 999 }
-            buffer.append(itoaTable.string(for: millis, digits: 3))
+            itoaTable.appendNumber(millis, digits: 3, to: &buffer)
         }
     }
     
     if options.contains(.withTimeZone) {
         var offset = components.gmtOffset
         if offset == 0 {
-            buffer.append("Z")
+            buffer.append(0x5A)  // 'Z'
         } else {
-            let sign: Character
+            let sign: UInt8
             if offset < 0 {
                 offset = -offset
-                sign = "-"
+                sign = 0x2D  // '-'
             } else {
-                sign = "+"
+                sign = 0x2B  // '+'
             }
             
             let showColonSeparatorInTimeZone = options.contains(.withColonSeparatorInTimeZone)
@@ -372,50 +394,62 @@ public func jjlFillBuffer(
             let seconds = offset % 60
             
             buffer.append(sign)
-            buffer.append(itoaTable.string(for: hours, digits: 2))
+            itoaTable.appendNumber(hours, digits: 2, to: &buffer)
             if showColonSeparatorInTimeZone {
-                buffer.append(":")
+                buffer.append(0x3A)  // ':'
             }
-            buffer.append(itoaTable.string(for: minutes, digits: 2))
+            itoaTable.appendNumber(minutes, digits: 2, to: &buffer)
             
             if seconds > 0 {
                 if showColonSeparatorInTimeZone {
-                    buffer.append(":")
+                    buffer.append(0x3A)  // ':'
                 }
-                buffer.append(itoaTable.string(for: seconds, digits: 2))
+                itoaTable.appendNumber(seconds, digits: 2, to: &buffer)
             }
         }
     }
 }
 
-// MARK: - String Parser
+// MARK: - Iterator-based String Parser
 
-private struct JJLStringParser {
-    private let string: String
-    private var index: String.Index
-    private let endIndex: String.Index
+private struct JJLIteratorParser {
+    private var iterator: String.UTF8View.Iterator
+    private var current: UInt8?
+    private var peeked: Bool = false
     var errorOccurred: Bool = false
     
     init(_ string: String) {
-        self.string = string
-        self.index = string.startIndex
-        self.endIndex = string.endIndex
-    }
-    
-    var isAtEnd: Bool {
-        return index >= endIndex
+        self.iterator = string.utf8.makeIterator()
+        self.current = nil
+        self.peeked = false
     }
     
     @inline(__always)
-    mutating func peek() -> Character? {
-        guard index < endIndex else { return nil }
-        return string[index]
+    mutating func isAtEnd() -> Bool {
+        if !peeked {
+            current = iterator.next()
+            peeked = true
+        }
+        return current == nil
+    }
+    
+    @inline(__always)
+    mutating func peek() -> UInt8? {
+        if !peeked {
+            current = iterator.next()
+            peeked = true
+        }
+        return current
     }
     
     @inline(__always)
     mutating func advance() {
-        guard index < endIndex else { return }
-        index = string.index(after: index)
+        if peeked {
+            peeked = false
+            current = nil
+        } else {
+            _ = iterator.next()
+        }
     }
     
     @inline(__always)
@@ -423,15 +457,15 @@ private struct JJLStringParser {
         var length: Int32 = 0
         var isNegative = false
         
-        if let c = peek(), c == "-" {
+        if let c = peek(), c == 0x2D {  // '-'
             isNegative = true
             advance()
         }
         
         var result: Int32 = 0
-        while !isAtEnd && (maxLength == -1 || length < maxLength) {
-            guard let c = peek(), c >= "0" && c <= "9" else { break }
-            let digit = Int32(c.asciiValue! - Character("0").asciiValue!)
+        while !isAtEnd() && (maxLength == -1 || length < maxLength) {
+            guard let c = peek(), c >= 0x30 && c <= 0x39 else { break }  // '0'-'9'
+            let digit = Int32(c - 0x30)
             result = result * 10 + digit
             length += 1
             advance()
@@ -446,7 +480,7 @@ private struct JJLStringParser {
     }
     
     @inline(__always)
-    mutating func consumeCharacter(_ expected: Character) {
+    mutating func consumeCharacter(_ expected: UInt8) {
         guard let c = peek(), c == expected else {
             errorOccurred = true
             return
@@ -460,7 +494,7 @@ private struct JJLStringParser {
             errorOccurred = true
             return
         }
-        if c != " " && c != "-" && c != ":" {
+        if c != 0x20 && c != 0x2D && c != 0x3A {  // ' ', '-', ':'
             errorOccurred = true
             return
         }
@@ -474,20 +508,27 @@ private struct JJLStringParser {
             return 0
         }
         
-        if c == "." || c == "," {
+        if c == 0x2E || c == 0x2C {  // '.' or ','
             advance()
         } else {
             errorOccurred = true
             return 0
         }
         
-        let startIndex = index
-        let num = consumeNumber(maxLength: 3)
-        let length = string.distance(from: startIndex, to: index)
+        var num: Int32 = 0
+        var length: Int32 = 0
+        
+        // Read up to 3 significant digits
+        while !isAtEnd() && length < 3 {
+            guard let c = peek(), c >= 0x30 && c <= 0x39 else { break }
+            num = num * 10 + Int32(c - 0x30)
+            length += 1
+            advance()
+        }
         
         // Consume any leftover decimal digits
-        while !isAtEnd {
-            guard let c = peek(), c >= "0" && c <= "9" else { break }
+        while !isAtEnd() {
+            guard let c = peek(), c >= 0x30 && c <= 0x39 else { break }
             advance()
         }
         
@@ -509,28 +550,28 @@ private struct JJLStringParser {
             return 0
         }
         
-        if c == "Z" {
+        if c == 0x5A {  // 'Z'
             advance()
             return 0
         }
         
-        let isNegative = c == "-"
+        let isNegative = c == 0x2D  // '-'
         advance()
         
         let hours = consumeNumber(maxLength: 2)
         if separator {
-            consumeCharacter(":")
+            consumeCharacter(0x3A)  // ':'
         }
         let minutes = consumeNumber(maxLength: 2)
         
         var seconds: Int32 = 0
-        if !isAtEnd {
+        if !isAtEnd() {
             if separator {
-                if peek() == ":" {
-                    consumeCharacter(":")
+                if let c = peek(), c == 0x3A {  // ':'
+                    consumeCharacter(0x3A)
                     seconds = consumeNumber(maxLength: 2)
                 }
-            } else if let c = peek(), c >= "0" && c <= "9" {
+            } else if let c = peek(), c >= 0x30 && c <= 0x39 {
                 seconds = consumeNumber(maxLength: 2)
             }
         }
@@ -583,7 +624,7 @@ public func jjlTimeIntervalForString(
         return (0, false)
     }
     
-    var parser = JJLStringParser(string)
+    var parser = JJLIteratorParser(string)
     var components = JJLTimeComponents()
     
     let showFractionalSeconds = options.contains(.withFractionalSeconds)
@@ -623,7 +664,7 @@ public func jjlTimeIntervalForString(
         if showDateSeparator && (showYear || showMonth) {
             parser.consumeSeparator()
         }
-        parser.consumeCharacter("W")
+        parser.consumeCharacter(0x57)  // 'W'
         let weeks = parser.consumeNumber(maxLength: 2) - 1
         dayOffset += weeks * 7
     }
@@ -665,7 +706,7 @@ public func jjlTimeIntervalForString(
     var millis: Int32 = 0
     if showTime {
         if showDate {
-            let separator: Character = timeSeparatorIsSpace ? " " : "T"
+            let separator: UInt8 = timeSeparatorIsSpace ? 0x20 : 0x54  // ' ' or 'T'
             parser.consumeCharacter(separator)
         }
         components.hour = parser.consumeNumber(maxLength: 2)
@@ -731,5 +772,5 @@ public func jjlStringFromDate(
         timeZone: timeZone,
         fallbackOffset: fallbackOffset
     )
-    return buffer.buffer
+    return buffer.toString()
 }
