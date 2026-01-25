@@ -20,17 +20,14 @@ let package = Package(
         // .package(url: /* package url */, from: "1.0.0"),
     ],
     targets: [
-        // C target with internal implementation
+        // Pure Swift internal implementation
         .target(
-            name: "JJLInternal",
-            dependencies: [],
-            cSettings: [
-                .headerSearchPath("Vendor/tzdb"),
-            ]),
+            name: "JJLInternalSwift",
+            dependencies: []),
         // Swift target with public API
         .target(
             name: "JJLISO8601DateFormatter",
-            dependencies: ["JJLInternal"]),
+            dependencies: ["JJLInternalSwift"]),
         .testTarget(
             name: "JJLISO8601DateFormatterTests",
             dependencies: ["JJLISO8601DateFormatter"]),

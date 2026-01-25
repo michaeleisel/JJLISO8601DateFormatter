@@ -2,16 +2,16 @@
 // Swift wrapper for JJLISO8601DateFormatter
 
 import Foundation
-import JJLInternal
+import JJLInternalSwift
 
-/// A high-performance ISO 8601 date formatter that uses C for date processing.
+/// A high-performance ISO 8601 date formatter implemented in pure Swift.
 public final class JJLISO8601DateFormatter: Formatter {
 
     private static let gmtTimeZone = TimeZone(identifier: "GMT")!
-    private static var nameToTimeZone: [String: timezone_t] = [:]
+    private static var nameToTimeZone: [String: JJLTimeZone] = [:]
     private static var dictionaryLock = pthread_rwlock_t()
 
-    private var cTimeZone: timezone_t?
+    private var jjlTimeZone: JJLTimeZone?
     private var timeZoneVarsLock = pthread_rwlock_t()
     private var fallbackFormatter: ISO8601DateFormatter?
     private var _formatOptions: ISO8601DateFormatter.Options
@@ -27,9 +27,9 @@ public final class JJLISO8601DateFormatter: Formatter {
             defer { pthread_rwlock_unlock(&timeZoneVarsLock) }
 
             _timeZone = newValue
-            cTimeZone = Self.cTimeZone(for: _timeZone, alwaysUseNSTimeZone: alwaysUseNSTimeZone)
+            jjlTimeZone = Self.jjlTimeZone(for: _timeZone, alwaysUseNSTimeZone: alwaysUseNSTimeZone)
 
-            if cTimeZone == nil {
+            if jjlTimeZone == nil {
                 fallbackFormatter = ISO8601DateFormatter()
                 fallbackFormatter?.formatOptions = _formatOptions
                 fallbackFormatter?.timeZone = _timeZone
@@ -79,7 +79,7 @@ public final class JJLISO8601DateFormatter: Formatter {
 
         super.init()
 
-        cTimeZone = Self.cTimeZone(for: _timeZone, alwaysUseNSTimeZone: alwaysUseNSTimeZone)
+        jjlTimeZone = Self.jjlTimeZone(for: _timeZone, alwaysUseNSTimeZone: alwaysUseNSTimeZone)
     }
 
     deinit {
@@ -94,11 +94,11 @@ public final class JJLISO8601DateFormatter: Formatter {
         _formatOptions = ISO8601DateFormatter.Options(rawValue: UInt(coder.decodeInteger(forKey: "formatOptions")))
         _timeZone = coder.decodeObject(forKey: "timeZone") as? TimeZone ?? Self.gmtTimeZone
         alwaysUseNSTimeZone = coder.decodeBool(forKey: "alwaysUseNSTimeZone")
-        cTimeZone = Self.cTimeZone(for: _timeZone, alwaysUseNSTimeZone: alwaysUseNSTimeZone)
+        jjlTimeZone = Self.jjlTimeZone(for: _timeZone, alwaysUseNSTimeZone: alwaysUseNSTimeZone)
 
         super.init(coder: coder)
 
-        if cTimeZone == nil {
+        if jjlTimeZone == nil {
             fallbackFormatter = ISO8601DateFormatter()
             fallbackFormatter?.formatOptions = _formatOptions
             fallbackFormatter?.timeZone = _timeZone
@@ -118,7 +118,7 @@ public final class JJLISO8601DateFormatter: Formatter {
     /// Thread-safe one-time initialization using Swift's lazy static semantics
     private static let setupOnce: Void = {
         pthread_rwlock_init(&dictionaryLock, nil)
-        JJLPerformInitialSetup()
+        jjlPerformInitialSetup()
     }()
 
     private static func performInitialSetupIfNecessary() {
@@ -127,7 +127,8 @@ public final class JJLISO8601DateFormatter: Formatter {
 
     // MARK: - Time Zone Handling
 
-    /// Adjusts time zone name for GMT offset formats (e.g., "GMT+0800" -> "GMT-08:00")
+    /// Adjusts time zone name for GMT offset formats (e.g., "GMT+0800" -> "GMT+08:00")
+    /// Note: For pure Swift implementation, we don't flip the sign as Foundation handles this correctly
     private static func adjustedTimeZoneName(_ name: String) -> String {
         let pattern = "^GMT(\\+|-)(\\d{2})(\\d{2})$"
         guard let regex = try? NSRegularExpression(pattern: pattern, options: []),
@@ -139,16 +140,15 @@ public final class JJLISO8601DateFormatter: Formatter {
         let hoursRange = Range(match.range(at: 2), in: name)!
         let minutesRange = Range(match.range(at: 3), in: name)!
 
-        let origSign = name[signRange]
-        let sign: Character = origSign == "-" ? "+" : "-"
+        let sign = name[signRange]
         let hours = name[hoursRange]
         let minutes = name[minutesRange]
 
         return "GMT\(sign)\(hours):\(minutes)"
     }
 
-    /// Gets or creates a C timezone for the given TimeZone (uses global cache)
-    private static func cTimeZone(for timeZone: TimeZone, alwaysUseNSTimeZone: Bool) -> timezone_t? {
+    /// Gets or creates a JJLTimeZone for the given TimeZone (uses global cache)
+    private static func jjlTimeZone(for timeZone: TimeZone, alwaysUseNSTimeZone: Bool) -> JJLTimeZone? {
         if alwaysUseNSTimeZone {
             return nil
         }
@@ -164,18 +164,18 @@ public final class JJLISO8601DateFormatter: Formatter {
         pthread_rwlock_unlock(&dictionaryLock)
 
         // Create new timezone
-        let cTimeZone = name.utf8CString.withUnsafeBufferPointer { jjl_tzalloc($0.baseAddress) }
+        let jjlTz = jjlAllocTimeZone(name)
 
-        if cTimeZone == nil {
+        if jjlTz == nil {
             print("[JJLISO8601DateFormatter] Warning: time zone not found for name \(name), falling back to NSTimeZone. Performance will be degraded")
         } else {
             // Store in global cache (write lock)
             pthread_rwlock_wrlock(&dictionaryLock)
-            nameToTimeZone[name] = cTimeZone
+            nameToTimeZone[name] = jjlTz
             pthread_rwlock_unlock(&dictionaryLock)
         }
 
-        return cTimeZone
+        return jjlTz
     }
 
     // MARK: - Format Validation
@@ -196,6 +196,29 @@ public final class JJLISO8601DateFormatter: Formatter {
 
         return formatOptions.isEmpty || formatOptions.isSubset(of: mask)
     }
+    
+    // MARK: - Options Conversion
+    
+    @inline(__always)
+    private static func jjlOptions(from options: ISO8601DateFormatter.Options) -> JJLFormatOptions {
+        var result = JJLFormatOptions()
+        
+        if options.contains(.withYear) { result.insert(.withYear) }
+        if options.contains(.withMonth) { result.insert(.withMonth) }
+        if options.contains(.withWeekOfYear) { result.insert(.withWeekOfYear) }
+        if options.contains(.withDay) { result.insert(.withDay) }
+        if options.contains(.withTime) { result.insert(.withTime) }
+        if options.contains(.withTimeZone) { result.insert(.withTimeZone) }
+        if options.contains(.withSpaceBetweenDateAndTime) { result.insert(.withSpaceBetweenDateAndTime) }
+        if options.contains(.withDashSeparatorInDate) { result.insert(.withDashSeparatorInDate) }
+        if options.contains(.withColonSeparatorInTime) { result.insert(.withColonSeparatorInTime) }
+        if options.contains(.withColonSeparatorInTimeZone) { result.insert(.withColonSeparatorInTimeZone) }
+        if #available(iOS 11.0, macOS 10.13, tvOS 11.0, visionOS 1.0, watchOS 4.0, *) {
+            if options.contains(.withFractionalSeconds) { result.insert(.withFractionalSeconds) }
+        }
+        
+        return result
+    }
 
     // MARK: - Date Formatting
 
@@ -204,7 +227,7 @@ public final class JJLISO8601DateFormatter: Formatter {
         pthread_rwlock_rdlock(&timeZoneVarsLock)
         defer { pthread_rwlock_unlock(&timeZoneVarsLock) }
 
-        return Self.stringFromDate(date, formatOptions: _formatOptions, cTimeZone: cTimeZone, timeZone: _timeZone)
+        return Self.stringFromDate(date, formatOptions: _formatOptions, jjlTimeZone: jjlTimeZone, timeZone: _timeZone)
     }
 
     /// Returns a date from the specified string, or nil if parsing fails.
@@ -216,54 +239,42 @@ public final class JJLISO8601DateFormatter: Formatter {
         pthread_rwlock_rdlock(&timeZoneVarsLock)
         defer { pthread_rwlock_unlock(&timeZoneVarsLock) }
 
-        guard let cTimeZone = cTimeZone else {
+        guard let jjlTz = jjlTimeZone else {
             return fallbackFormatter?.date(from: string)
         }
 
-        var errorOccurred = false
-        let interval = string.withCString { cString -> TimeInterval in
-            return JJLTimeIntervalForString(
-                cString,
-                Int32(strlen(cString)),
-                CFISO8601DateFormatOptions(rawValue: UInt(_formatOptions.rawValue)),
-                cTimeZone,
-                &errorOccurred
-            )
-        }
+        let result = jjlTimeIntervalForString(
+            string,
+            options: Self.jjlOptions(from: _formatOptions),
+            timeZone: jjlTz
+        )
 
-        return errorOccurred ? nil : Date(timeIntervalSince1970: interval)
+        return result.success ? Date(timeIntervalSince1970: result.interval) : nil
     }
 
     /// Returns a string representation of the specified date using the provided time zone and format options.
     public static func string(from date: Date, timeZone: TimeZone, formatOptions: ISO8601DateFormatter.Options) -> String {
         performInitialSetupIfNecessary()
-        let cTimeZone = Self.cTimeZone(for: timeZone, alwaysUseNSTimeZone: false)
-        return stringFromDate(date, formatOptions: formatOptions, cTimeZone: cTimeZone, timeZone: timeZone)
+        let jjlTz = Self.jjlTimeZone(for: timeZone, alwaysUseNSTimeZone: false)
+        return stringFromDate(date, formatOptions: formatOptions, jjlTimeZone: jjlTz, timeZone: timeZone)
     }
 
     @inline(__always)
     private static func stringFromDate(
         _ date: Date,
         formatOptions: ISO8601DateFormatter.Options,
-        cTimeZone: timezone_t?,
+        jjlTimeZone: JJLTimeZone?,
         timeZone: TimeZone
     ) -> String {
         let time = date.timeIntervalSince1970
-        let offset: Double = cTimeZone != nil ? 0 : Double(timeZone.secondsFromGMT(for: date))
+        let offset: Double = jjlTimeZone != nil ? 0 : Double(timeZone.secondsFromGMT(for: date))
 
-        return withUnsafeTemporaryAllocation(of: CChar.self, capacity: Int(kJJLMaxDateLength)) { buffer in
-            buffer.initialize(repeating: 0)
-
-            JJLFillBufferForDate(
-                buffer.baseAddress,
-                time,
-                CFISO8601DateFormatOptions(rawValue: UInt(formatOptions.rawValue)),
-                cTimeZone,
-                offset
-            )
-
-            return String(cString: buffer.baseAddress!)
-        }
+        return jjlStringFromDate(
+            timeInSeconds: time,
+            options: jjlOptions(from: formatOptions),
+            timeZone: jjlTimeZone,
+            fallbackOffset: offset
+        )
     }
 
     // MARK: - NSFormatter Override
