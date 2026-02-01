@@ -1,4 +1,0 @@
-module JJLInternal {
-    header "JJLInternal.h"
-    export *
-}

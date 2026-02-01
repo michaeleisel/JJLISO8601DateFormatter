@@ -1,6 +1,5 @@
 //Copyright (c) 2018 Michael Eisel. All rights reserved.
 
-#import "tzfile__.h"
 #import <time.h>
 #import <assert.h>
 #import <string.h>

@@ -16,8 +16,17 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "JJLInternal",
+            name: "tzdb",
             dependencies: [],
+            path: "Sources/tzdb",
+            publicHeadersPath: "include",
+            cSettings: [
+                .headerSearchPath("."),
+            ]
+        ),
+        .target(
+            name: "JJLInternal",
+            dependencies: ["tzdb"],
             path: "Sources/JJLInternal",
             publicHeadersPath: "include",
             cSettings: [

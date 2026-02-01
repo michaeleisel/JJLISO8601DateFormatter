@@ -40,11 +40,8 @@
 # endif
 #endif
 
-typedef struct state *timezone_t;
-struct state *jjl_tzalloc(char const *name);
-void jjl_tzfree(struct state *sp);
-struct tm * jjl_localtime_rz(struct state *sp, time_t const *timep, struct tm *tmp);
-time_t jjl_mktime_z(struct state *sp, struct tm *tmp);
+#include "tzdb.h"
+
 ssize_t jjl_saferead(int fd, void *buffer, size_t nbytes);
 
 #ifndef TZDEFAULT
