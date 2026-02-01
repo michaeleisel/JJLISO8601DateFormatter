@@ -9,10 +9,14 @@ public final class JJLISO8601DateFormatter: Formatter {
     
     private static let gmtTimeZone = TimeZone(identifier: "GMT")!
     private static var nameToTimeZone: [String: timezone_t] = [:]
-    private static var dictionaryLock = pthread_rwlock_t()
+    private static var dictionaryLock: UnsafeMutablePointer<pthread_rwlock_t> = {
+        let lock = UnsafeMutablePointer<pthread_rwlock_t>.allocate(capacity: 1)
+        pthread_rwlock_init(lock, nil)
+        return lock
+    }()
     
     private var cTimeZone: timezone_t?
-    private var timeZoneVarsLock = pthread_rwlock_t()
+    private let timeZoneVarsLock: UnsafeMutablePointer<pthread_rwlock_t>
     private var fallbackFormatter: ISO8601DateFormatter?
     private var _formatOptions: ISO8601DateFormatter.Options
     private var _timeZone: TimeZone
@@ -23,8 +27,8 @@ public final class JJLISO8601DateFormatter: Formatter {
             return _timeZone
         }
         set {
-            pthread_rwlock_wrlock(&timeZoneVarsLock)
-            defer { pthread_rwlock_unlock(&timeZoneVarsLock) }
+            pthread_rwlock_wrlock(timeZoneVarsLock)
+            defer { pthread_rwlock_unlock(timeZoneVarsLock) }
             
             _timeZone = newValue
             cTimeZone = Self.cTimeZone(for: _timeZone, alwaysUseNSTimeZone: alwaysUseNSTimeZone)
@@ -46,8 +50,8 @@ public final class JJLISO8601DateFormatter: Formatter {
         set {
             assert(Self.isValidFormatOptions(newValue), "Invalid format options. Must be empty or only contain valid options: [.withYear, .withMonth, .withWeekOfYear, .withDay, .withTime, .withTimeZone, .withSpaceBetweenDateAndTime, .withDashSeparatorInDate, .withColonSeparatorInTime, .withColonSeparatorInTimeZone, .withFractionalSeconds, .withFullDate, .withFullTime, .withInternetDateTime]")
             
-            pthread_rwlock_wrlock(&timeZoneVarsLock)
-            defer { pthread_rwlock_unlock(&timeZoneVarsLock) }
+            pthread_rwlock_wrlock(timeZoneVarsLock)
+            defer { pthread_rwlock_unlock(timeZoneVarsLock) }
             
             _formatOptions = newValue
             fallbackFormatter?.formatOptions = newValue
@@ -67,7 +71,8 @@ public final class JJLISO8601DateFormatter: Formatter {
     public override init() {
         Self.performInitialSetupIfNecessary()
         
-        pthread_rwlock_init(&timeZoneVarsLock, nil)
+        timeZoneVarsLock = UnsafeMutablePointer<pthread_rwlock_t>.allocate(capacity: 1)
+        pthread_rwlock_init(timeZoneVarsLock, nil)
         
         _formatOptions = [
             .withInternetDateTime,
@@ -83,13 +88,15 @@ public final class JJLISO8601DateFormatter: Formatter {
     }
     
     deinit {
-        pthread_rwlock_destroy(&timeZoneVarsLock)
+        pthread_rwlock_destroy(timeZoneVarsLock)
+        timeZoneVarsLock.deallocate()
     }
     
     public required init?(coder: NSCoder) {
         Self.performInitialSetupIfNecessary()
         
-        pthread_rwlock_init(&timeZoneVarsLock, nil)
+        timeZoneVarsLock = UnsafeMutablePointer<pthread_rwlock_t>.allocate(capacity: 1)
+        pthread_rwlock_init(timeZoneVarsLock, nil)
         
         _formatOptions = ISO8601DateFormatter.Options(rawValue: UInt(coder.decodeInteger(forKey: "formatOptions")))
         _timeZone = coder.decodeObject(forKey: "timeZone") as? TimeZone ?? Self.gmtTimeZone
@@ -117,7 +124,6 @@ public final class JJLISO8601DateFormatter: Formatter {
     
     /// Thread-safe one-time initialization using Swift's lazy static semantics
     private static let setupOnce: Void = {
-        pthread_rwlock_init(&dictionaryLock, nil)
         JJLPerformInitialSetup()
     }()
     
@@ -156,12 +162,12 @@ public final class JJLISO8601DateFormatter: Formatter {
         let name = adjustedTimeZoneName(timeZone.identifier)
         
         // Check global cache first (read lock)
-        pthread_rwlock_rdlock(&dictionaryLock)
-        if let cached = nameToTimeZone[name] {
-            pthread_rwlock_unlock(&dictionaryLock)
+        pthread_rwlock_rdlock(dictionaryLock)
+        let cached = nameToTimeZone[name]
+        pthread_rwlock_unlock(dictionaryLock)
+        if let cached {
             return cached
         }
-        pthread_rwlock_unlock(&dictionaryLock)
         
         // Create new timezone
         let cTimeZone = name.utf8CString.withUnsafeBufferPointer { jjl_tzalloc($0.baseAddress) }
@@ -170,9 +176,9 @@ public final class JJLISO8601DateFormatter: Formatter {
             print("[JJLISO8601DateFormatter] Warning: time zone not found for name \(name), falling back to NSTimeZone. Performance will be degraded")
         } else {
             // Store in global cache (write lock)
-            pthread_rwlock_wrlock(&dictionaryLock)
+            pthread_rwlock_wrlock(dictionaryLock)
             nameToTimeZone[name] = cTimeZone
-            pthread_rwlock_unlock(&dictionaryLock)
+            pthread_rwlock_unlock(dictionaryLock)
         }
         
         return cTimeZone
@@ -201,8 +207,8 @@ public final class JJLISO8601DateFormatter: Formatter {
     
     /// Returns a string representation of the specified date.
     public func string(from date: Date) -> String {
-        pthread_rwlock_rdlock(&timeZoneVarsLock)
-        defer { pthread_rwlock_unlock(&timeZoneVarsLock) }
+        pthread_rwlock_rdlock(timeZoneVarsLock)
+        defer { pthread_rwlock_unlock(timeZoneVarsLock) }
         
         return Self.stringFromDate(date, formatOptions: _formatOptions, cTimeZone: cTimeZone, timeZone: _timeZone)
     }
@@ -213,8 +219,8 @@ public final class JJLISO8601DateFormatter: Formatter {
             return nil
         }
         
-        pthread_rwlock_rdlock(&timeZoneVarsLock)
-        defer { pthread_rwlock_unlock(&timeZoneVarsLock) }
+        pthread_rwlock_rdlock(timeZoneVarsLock)
+        defer { pthread_rwlock_unlock(timeZoneVarsLock) }
         
         guard let cTimeZone = cTimeZone else {
             return fallbackFormatter?.date(from: string)
