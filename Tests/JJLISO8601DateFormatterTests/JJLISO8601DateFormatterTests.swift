@@ -386,6 +386,11 @@ final class JJLISO8601DateFormatterTests: XCTestCase {
         end = TimeInterval(Self.secondsPerYear * 50)
         increment = moreThorough ? 1001 : 10001
         testDatesInParallel(startInterval: 0, endInterval: end, increment: increment)
+        
+        print("Testing 400-year leap year cycles...")
+        end = TimeInterval(Self.secondsPerYear * 1200)
+        increment = moreThorough ? 10001 : 100001
+        testDatesInParallel(startInterval: 0, endInterval: end, increment: increment)
     }
     
     func testNSFormatter() {
