@@ -405,7 +405,6 @@ static inline int32_t JJLConsumeTimeZone(const char **string, const char *end, b
 }
 
 double JJLTimeIntervalForString(const char *string, int32_t length, CFISO8601DateFormatOptions options, timezone_t timeZone, bool *errorOccurred) {
-    // PERF: Check if options has only 0 or 1 bit set (invalid)
     if ((options & (options - 1)) == 0) {
         *errorOccurred = true;
         return 0;
@@ -413,7 +412,6 @@ double JJLTimeIntervalForString(const char *string, int32_t length, CFISO8601Dat
 
     const char *origStringPosition = string;
     const char *end = origStringPosition + length;
-    // Removed duplicate options check that was here
     struct tm components = {0};
 
     bool showFractionalSeconds = JJLGetShowFractionalSeconds(options);
