@@ -1,23 +1,47 @@
 # JJLISO8601DateFormatter
 
-`JJLISO8601DateFormatter` is a thread-safe, feature complete, drop-in replacement for `NSISO8601DateFormatter` that is 10x or more faster for both conversion to and from dates.
+`JJLISO8601DateFormatter` is a thread-safe, feature complete, drop-in replacement for `NSISO8601DateFormatter` and a high-performance alternative to `ISO8601FormatStyle`, with faster conversion to and from dates than both.
 
-Compared to `NSISO8601DateFormatter`:
-
-- Date to string: **12x+** faster
-- String to date: **10x** faster
-- Object creation: **10x** faster
-
-Compared to newer Swift `Date` conversions ([string to date](https://developer.apple.com/documentation/foundation/date/iso8601formatstyle/3766499-parse) and [date to string](https://developer.apple.com/documentation/foundation/date/3766420-iso8601format)), for newer versions of iOS:
-
-- Date to string: 50% faster
-- String to date: 30% faster
+Compared to newer Swift `Date` conversions ([string to date](https://developer.apple.com/documentation/foundation/date/iso8601formatstyle/3766499-parse) and [date to string](https://developer.apple.com/documentation/foundation/date/3766420-iso8601format)), for newer versions of iOS, see the updated measurements in "Benchmarks (iOS Release)" below.
 
 More info on how the benchmark was done is [here](https://github.com/michaeleisel/JJLISO8601DateFormatter#how-is-the-benchmarking-done).
 
+## Benchmarks (iOS Release)
+
+Benchmarking code now lives in `Benchmark/` as a standalone package so it can run in Release on both iOS and macOS:
+
+- `BenchmarkiOSApp`: iOS app that runs benchmarks on device
+- `BenchmarkCLI`: macOS CLI (`swift run -c release BenchmarkCLI`)
+
+To run on iOS: open `Benchmark/Package.swift` in Xcode, select the `BenchmarkiOSApp` scheme, choose a physical device, switch the build configuration to Release, and run.
+
+The string -> date measurements use ISO 8601 strings that include time zone offsets to exercise the fast parsing path.
+
+### Date -> String (ISO8601DateFormatter baseline)
+
+Device: iPhone 17 Pro Max (iOS 26.2)
+
+| API | Runs/sec | Speedup vs ISO8601DateFormatter |
+| --- | ---: | ---: |
+| JJLISO8601DateFormatter | 16640384.28 | 12.77x |
+| ISO8601FormatStyle | 6747453.46 | 5.18x |
+| FormatStyle | 4354399.09 | 3.34x |
+| ISO8601DateFormatter | 1303465.58 | 1.00x |
+
+### String -> Date (fast path, time zone offsets)
+
+Device: iPhone 17 Pro Max (iOS 26.2)
+
+| API | Runs/sec | Speedup vs ISO8601DateFormatter |
+| --- | ---: | ---: |
+| JJLISO8601DateFormatter | 27444341.29 | 533.17x |
+| ISO8601FormatStyle | 1789599.13 | 34.77x |
+| FormatStyle | 1576687.82 | 30.63x |
+| ISO8601DateFormatter | 51473.83 | 1.00x |
+
 ## Usage
 
-Because it is drop-in, you can simply replace the word `NSISO8601DateFormatter` with `JJLISO8601DateFormatter` and add the header include, `#import <JJLISODateFormatter/JJLISODateFormatter.h>`.
+Because it is drop-in, you can simply replace the word `NSISO8601DateFormatter` with `JJLISO8601DateFormatter` and add the header include, `#import <JJLISODateFormatter/JJLISODateFormatter.h>` or `import JJLISODateFormatter` in Swift.
 
 ## Requirements
 
@@ -68,7 +92,7 @@ Yes, there are a lot, the question is which ones are worth optimizing. Feel free
 
 ### How is the benchmarking done?
 
-It's done by timing many date to string and string to date conversions across two ranges (15 days before now to 15 days after, from 1970 to now), three time zones, and `NSISO8601DateFormatOptionsWithInternetDateTime | NSISO8601DateFormatWithFractionalSeconds` for the format options. The benchmark code is located in `-viewDidLoad` of the Example project's [view controller](https://github.com/michaeleisel/JJLISO8601DateFormatter/blob/master/Example/JJLISO8601DateFormatterApp/ViewController.m), and you can get nice benchmarking output yourself by running that project. I normally do testing on my iPhone 8, with the occasional double check on other devices. Obviously the numbers can vary.
+It's done by timing repeated date -> string and string -> date conversions using `BenchmarkCore` in `Benchmark/Sources`. The iOS app target (`BenchmarkiOSApp`) runs the same benchmark logic on device in Release; the macOS CLI prints markdown tables, and you can get nice benchmarking output yourself by running that project. I normally run the benchmarks on a physical iPhone; numbers can vary by device and OS version.
 
 ## Future Improvements and Contribution
 
