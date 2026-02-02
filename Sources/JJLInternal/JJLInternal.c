@@ -535,6 +535,10 @@ double JJLTimeIntervalForString(const char *string, int32_t length, CFISO8601Dat
         
         return (double)timestamp + millis / 1000.0;
     } else {
+        // This path handles ISO 8601 "Local Time" (strings without explicit timezone).
+        // Because the UTC offset for a local time can vary (due to DST or historical changes),
+        // we must use jjl_mktime_z to perform a binary search on the timezone transition table
+        // to resolve the correct UTC timestamp.
         components.tm_isdst = -1; // Let library decide
         
         if (*errorOccurred) {
