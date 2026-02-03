@@ -15,6 +15,10 @@ let package = Package(
         .executable(
             name: "BenchmarkCLI",
             targets: ["BenchmarkCLI"]
+        ),
+        .executable(
+            name: "BenchmarkiOSApp",
+            targets: ["BenchmarkiOSApp"]
         )
     ],
     dependencies: [
@@ -28,6 +32,11 @@ let package = Package(
         .executableTarget(
             name: "BenchmarkCLI",
             dependencies: ["BenchmarkCore"]
+        ),
+        .executableTarget(
+            name: "BenchmarkiOSApp",
+            dependencies: ["BenchmarkCore"],
+            path: "Sources/BenchmarkiOSApp"
         )
     ]
 )

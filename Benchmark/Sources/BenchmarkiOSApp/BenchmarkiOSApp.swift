@@ -12,10 +12,14 @@ struct BenchmarkiOSApp: App {
     }
 }
 
-struct BenchmarkView: View {
+public struct BenchmarkView: View {
     @StateObject private var model = BenchmarkViewModel()
+    
+    public init() {
+        
+    }
 
-    var body: some View {
+    public var body: some View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
