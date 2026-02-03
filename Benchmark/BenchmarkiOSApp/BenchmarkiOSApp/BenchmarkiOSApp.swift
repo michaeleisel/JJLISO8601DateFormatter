@@ -31,6 +31,7 @@ struct BenchmarkView: View {
                     if let report = model.report {
                         BenchmarkSection(title: BenchmarkOperation.dateToString.rawValue, report: report, operation: .dateToString)
                         BenchmarkSection(title: BenchmarkOperation.stringToDate.rawValue, report: report, operation: .stringToDate)
+                        BenchmarkSection(title: BenchmarkOperation.stringToDateSlowPath.rawValue, report: report, operation: .stringToDateSlowPath)
                     } else {
                         Text("No results yet. Run the benchmarks on a physical iOS device in Release mode for accurate numbers.")
                             .foregroundColor(.secondary)
@@ -125,6 +126,7 @@ final class BenchmarkViewModel: ObservableObject {
 
         printResults(for: .dateToString)
         printResults(for: .stringToDate)
+        printResults(for: .stringToDateSlowPath)
 
         print("")
         print("Markdown tables (paste into README):")
@@ -134,5 +136,8 @@ final class BenchmarkViewModel: ObservableObject {
         print("")
         print("### String -> Date")
         print(report.markdownTable(operation: .stringToDate))
+        print("")
+        print("### String -> Date (slow path)")
+        print(report.markdownTable(operation: .stringToDateSlowPath))
     }
 }

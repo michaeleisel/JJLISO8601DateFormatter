@@ -11,6 +11,7 @@ public enum BenchmarkCategory: String, CaseIterable, Sendable {
 public enum BenchmarkOperation: String, CaseIterable, Sendable {
     case dateToString = "Date -> String"
     case stringToDate = "String -> Date"
+    case stringToDateSlowPath = "String -> Date (slow path)"
 }
 
 public struct BenchmarkResult: Sendable, Identifiable {
@@ -90,6 +91,15 @@ public struct BenchmarkRunner: Sendable {
             .withFractionalSeconds,
             .withColonSeparatorInTimeZone
         ]
+        let slowFormatOptions: ISO8601DateFormatter.Options = [
+            .withYear,
+            .withMonth,
+            .withDay,
+            .withTime,
+            .withFractionalSeconds,
+            .withDashSeparatorInDate,
+            .withColonSeparatorInTime
+        ]
 
         let jjlFormatter = JJLISO8601DateFormatter()
         jjlFormatter.timeZone = timeZone
@@ -98,12 +108,31 @@ public struct BenchmarkRunner: Sendable {
         let isoFormatter = ISO8601DateFormatter()
         isoFormatter.timeZone = timeZone
         isoFormatter.formatOptions = formatOptions
+        
+        let slowDateStrings: [String] = [
+            "2018-09-13T19:56:48.980",
+            "2018-09-13T16:56:48.980",
+            "2018-09-14T04:56:48.980"
+        ]
+        let slowJjlFormatter = JJLISO8601DateFormatter()
+        slowJjlFormatter.timeZone = timeZone
+        slowJjlFormatter.formatOptions = slowFormatOptions
+        
+        let slowIsoFormatter = ISO8601DateFormatter()
+        slowIsoFormatter.timeZone = timeZone
+        slowIsoFormatter.formatOptions = slowFormatOptions
 
         let iso8601Style = makeISO8601FormatStyle()
         let iso8601ParseStrategy = iso8601Style.parseStrategy
 
         let expectedDates: [Date] = dateStrings.compactMap { isoFormatter.date(from: $0) }
         hardAssert(expectedDates.count == dateStrings.count, "Failed to parse sample strings")
+        let expectedSlowDates: [Date] = slowDateStrings.compactMap { slowIsoFormatter.date(from: $0) }
+        hardAssert(expectedSlowDates.count == slowDateStrings.count, "Failed to parse slow-path sample strings")
+        // ISO8601FormatStyle requires a timezone in the string, so append the runner offset.
+        let slowDateStringsWithTimeZone: [String] = zip(slowDateStrings, expectedSlowDates).map { string, date in
+            string + timeZoneOffsetString(for: date, timeZone: timeZone)
+        }
 
         var results: [BenchmarkResult] = []
         results.append(runDateToString(
@@ -203,7 +232,7 @@ public struct BenchmarkRunner: Sendable {
                 }
             }
         ))
-
+        
         results.append(runStringToDate(
             category: .iso8601FormatStyle,
             test: {
@@ -221,7 +250,7 @@ public struct BenchmarkRunner: Sendable {
                 }
             }
         ))
-
+        
         results.append(runStringToDate(
             category: .formatStyle,
             test: {
@@ -241,7 +270,80 @@ public struct BenchmarkRunner: Sendable {
                 }
             }
         ))
-
+        
+        results.append(runStringToDateSlowPath(
+            category: .jjl,
+            test: {
+                for (string, expected) in zip(slowDateStrings, expectedSlowDates) {
+                    guard let parsed = slowJjlFormatter.date(from: string) else { return false }
+                    if !datesMatch(parsed, expected) { return false }
+                }
+                return true
+            },
+            block: {
+                for index in 0..<iterationsPerBatch {
+                    let string = slowDateStrings[index % slowDateStrings.count]
+                    let value = slowJjlFormatter.date(from: string)
+                    blackHole(value)
+                }
+            }
+        ))
+        
+        results.append(runStringToDateSlowPath(
+            category: .iso8601DateFormatter,
+            test: {
+                for (string, expected) in zip(slowDateStrings, expectedSlowDates) {
+                    guard let parsed = slowIsoFormatter.date(from: string) else { return false }
+                    if !datesMatch(parsed, expected) { return false }
+                }
+                return true
+            },
+            block: {
+                for index in 0..<iterationsPerBatch {
+                    let string = slowDateStrings[index % slowDateStrings.count]
+                    let value = slowIsoFormatter.date(from: string)
+                    blackHole(value)
+                }
+            }
+        ))
+        
+        results.append(runStringToDateSlowPath(
+            category: .iso8601FormatStyle,
+            test: {
+                for (string, expected) in zip(slowDateStringsWithTimeZone, expectedSlowDates) {
+                    guard let parsed = try? Date(string, strategy: iso8601ParseStrategy) else { return false }
+                    if !datesMatch(parsed, expected) { return false }
+                }
+                return true
+            },
+            block: {
+                for index in 0..<iterationsPerBatch {
+                    let string = slowDateStringsWithTimeZone[index % slowDateStringsWithTimeZone.count]
+                    let value = try? Date(string, strategy: iso8601ParseStrategy)
+                    blackHole(value)
+                }
+            }
+        ))
+        
+        results.append(runStringToDateSlowPath(
+            category: .formatStyle,
+            test: {
+                for (string, expected) in zip(slowDateStringsWithTimeZone, expectedSlowDates) {
+                    let style = makeISO8601FormatStyle()
+                    guard let parsed = try? Date(string, strategy: style) else { return false }
+                    if !datesMatch(parsed, expected) { return false }
+                }
+                return true
+            },
+            block: {
+                for index in 0..<iterationsPerBatch {
+                    let style = makeISO8601FormatStyle()
+                    let string = slowDateStringsWithTimeZone[index % slowDateStringsWithTimeZone.count]
+                    let value = try? Date(string, strategy: style)
+                    blackHole(value)
+                }
+            }
+        ))
         return BenchmarkReport(
             results: results,
             iterationsPerBatch: iterationsPerBatch,
@@ -266,6 +368,15 @@ public struct BenchmarkRunner: Sendable {
     ) -> BenchmarkResult {
         let rate = benchmark(name: "\(BenchmarkOperation.stringToDate.rawValue) - \(category.rawValue)", test: test, block: block)
         return BenchmarkResult(operation: .stringToDate, category: category, runsPerSecond: rate)
+    }
+    
+    private func runStringToDateSlowPath(
+        category: BenchmarkCategory,
+        test: () -> Bool,
+        block: () -> Void
+    ) -> BenchmarkResult {
+        let rate = benchmark(name: "\(BenchmarkOperation.stringToDateSlowPath.rawValue) - \(category.rawValue)", test: test, block: block)
+        return BenchmarkResult(operation: .stringToDateSlowPath, category: category, runsPerSecond: rate)
     }
 
     private func benchmark(name: String, test: () -> Bool, block: () -> Void) -> Double {
@@ -347,4 +458,14 @@ private func hardAssert(_ condition: @autoclosure () -> Bool, _ message: @autocl
 @inline(__always)
 private func datesMatch(_ lhs: Date, _ rhs: Date) -> Bool {
     abs(lhs.timeIntervalSince1970 - rhs.timeIntervalSince1970) < 0.000_5
+}
+
+@inline(__always)
+private func timeZoneOffsetString(for date: Date, timeZone: TimeZone) -> String {
+    let seconds = timeZone.secondsFromGMT(for: date)
+    let sign = seconds < 0 ? "-" : "+"
+    let absSeconds = abs(seconds)
+    let hours = absSeconds / 3600
+    let minutes = (absSeconds % 3600) / 60
+    return String(format: "%@%02d:%02d", sign, hours, minutes)
 }

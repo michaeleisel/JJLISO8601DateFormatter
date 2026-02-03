@@ -27,6 +27,7 @@ func printResults(for operation: BenchmarkOperation) {
 
 printResults(for: .dateToString)
 printResults(for: .stringToDate)
+printResults(for: .stringToDateSlowPath)
 
 print("")
 print("Markdown tables (paste into README):")
@@ -36,3 +37,6 @@ print(report.markdownTable(operation: .dateToString))
 print("")
 print("### String -> Date")
 print(report.markdownTable(operation: .stringToDate))
+print("")
+print("### String -> Date (slow path)")
+print(report.markdownTable(operation: .stringToDateSlowPath))

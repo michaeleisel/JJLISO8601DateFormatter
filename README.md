@@ -39,6 +39,19 @@ Device: iPhone 17 Pro Max (iOS 26.2)
 | FormatStyle | 1576687.82 | 30.63x |
 | ISO8601DateFormatter | 51473.83 | 1.00x |
 
+### String -> Date (slow path)
+
+Device: iPhone 17 Pro Max (iOS 26.2)
+
+Slow path triggers when the input string omits explicit time zone information. In this case the parser must resolve local time using the time zone transition table (binary search), which is inherently slower.
+
+| API | Runs/sec | Speedup vs ISO8601DateFormatter |
+| --- | ---: | ---: |
+| JJLISO8601DateFormatter | 969984.48 | 17.84x |
+| ISO8601FormatStyle | 1655150.91 | 30.45x |
+| FormatStyle | 1472650.98 | 27.09x |
+| ISO8601DateFormatter | 54365.02 | 1.00x |
+
 ## Usage
 
 Because it is drop-in, you can simply replace the word `NSISO8601DateFormatter` with `JJLISO8601DateFormatter` and add the header include, `#import <JJLISODateFormatter/JJLISODateFormatter.h>` or `import JJLISODateFormatter` in Swift.
