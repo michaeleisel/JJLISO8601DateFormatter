@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'JJLISO8601DateFormatter'
-  s.version          = '0.1.8'
+  s.version          = '0.2.0'
   s.summary          = 'A 10x+ faster drop-in replacement for NSISO8601DateFormatter'
 
   s.description      = <<-DESC
