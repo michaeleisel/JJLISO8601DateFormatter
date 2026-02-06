@@ -412,6 +412,17 @@ int JJLSafeOpen(const char *path, int mode) {
     return JJLSafeOpenInjection(path, mode, open);
 }
 
+// Non-variadic version for Swift testing
+int JJLSafeOpenInjectionNonVariadic(const char *path, int mode, int (*openPtr)(const char *path, int mode)) {
+    while (true) {
+        errno = 0;
+        int result = openPtr(path, mode);
+        if (errno != EINTR) {
+            return result;
+        }
+    }
+}
+
 bool JJLGoodVersion(const char *name) {
     int fd = JJLSafeOpen(name, OPEN_MODE);
     char header[5];

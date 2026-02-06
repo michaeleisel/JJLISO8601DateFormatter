@@ -6,7 +6,6 @@ import PackageDescription
 let package = Package(
     name: "JJLISO8601DateFormatter",
     products: [
-        // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .library(
             name: "JJLISO8601DateFormatter",
             targets: ["JJLISO8601DateFormatter"]),
@@ -16,13 +15,34 @@ let package = Package(
         // .package(url: /* package url */, from: "1.0.0"),
     ],
     targets: [
-        // Targets are the basic building blocks of a package. A target can define a module or a test suite.
-        // Targets can depend on other targets in this package, and on products in packages which this package depends on.
+        .target(
+            name: "tzdb",
+            dependencies: [],
+            path: "Sources/tzdb",
+            publicHeadersPath: "include",
+            cSettings: [
+                .headerSearchPath("."),
+            ]
+        ),
+        .target(
+            name: "JJLInternal",
+            dependencies: ["tzdb"],
+            path: "Sources/JJLInternal",
+            publicHeadersPath: "include",
+            cSettings: [
+                .headerSearchPath("."),
+            ]
+        ),
         .target(
             name: "JJLISO8601DateFormatter",
-            dependencies: []),
+            dependencies: ["JJLInternal"],
+            path: "Sources/JJLISO8601DateFormatter"),
         .testTarget(
             name: "JJLISO8601DateFormatterTests",
-            dependencies: ["JJLISO8601DateFormatter"]),
+            dependencies: ["JJLISO8601DateFormatter"],
+            cSettings: [
+                .headerSearchPath("include"),
+            ]
+        ),
     ]
 )
